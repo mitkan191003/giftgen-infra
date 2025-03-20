@@ -4,6 +4,8 @@ locals {
   create_frontend_dns = var.cloudflare_zone_id != "" && var.frontend_hostname != "" && var.frontend_cname_target != ""
 }
 
+data "aws_region" "current" {}
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.19.0"

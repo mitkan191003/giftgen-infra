@@ -35,7 +35,7 @@ This keeps DNS and certificates aligned with the user’s actual DNS provider in
 
 ### Scheduled Cleanup
 
-Scheduled cleanup should run as an in-cluster Kubernetes `CronJob` managed by ArgoCD in the `giftgen-system` namespace.
+Scheduled cleanup should run as an in-cluster Kubernetes `CronJob` managed by ArgoCD as part of the backend release.
 
 This is a better fit than `EventBridge Scheduler -> Lambda -> Kubernetes Job` because:
 
@@ -54,6 +54,8 @@ Provision ACM certificates in Terraform for the backend API. Avoid cert-manager 
 - Cloudflare frontend DNS record management
 - ACM certificate request and Cloudflare DNS validation wiring for the API hostname
 - ArgoCD install and namespace bootstrap
+- backend runtime IRSA for Secrets Manager and S3 access
+- ArgoCD `AppProject` and `Application` generation for the backend Helm chart when repo inputs are set
 
 Current default cost and compatibility posture:
 
@@ -63,10 +65,9 @@ Current default cost and compatibility posture:
 
 ## What Still Needs A Follow-Up Infra Pass
 
-- AWS Load Balancer Controller IAM policy and Helm values
-- backend ingress and the final Cloudflare API record pointing at the ingress endpoint
-- ArgoCD application manifests for API, worker, and cleanup `CronJob`
-- External Secrets or Secrets Store CSI selection and rollout
+- AWS Load Balancer Controller installation
+- the final Cloudflare API record pointing at the live ingress endpoint
+- private repo credential management for ArgoCD if the backend repo is not public
 - image automation details for ArgoCD-managed workloads
 - staging and prod environments
 

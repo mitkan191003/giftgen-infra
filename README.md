@@ -13,7 +13,7 @@ Terraform for the AWS platform that supports the frontend and backend.
 - `modules/core_platform/`
   - VPC, EKS, RDS, S3, SQS, ECR, Cognito, Cloudflare DNS, and supporting resources
 - `modules/cluster_bootstrap/`
-  - ArgoCD installation and namespace bootstrap
+  - ArgoCD installation, runtime IRSA, and ArgoCD application bootstrap
 
 ## Why Two Environment Phases
 
@@ -24,7 +24,7 @@ Trying to create EKS and immediately use the Kubernetes and Helm providers in th
 
 That still satisfies the “no kubectl bootstrap steps” requirement while keeping Terraform predictable.
 
-Cleanup is no longer modeled as a Terraform-managed EventBridge or Lambda path. The intended scheduled cleanup path is an ArgoCD-managed Kubernetes `CronJob` that will live with the other application manifests.
+Cleanup is no longer modeled as a Terraform-managed EventBridge or Lambda path. The intended scheduled cleanup path is an ArgoCD-managed Kubernetes `CronJob` that lives in the backend Helm release.
 
 ## Intended Apply Order
 

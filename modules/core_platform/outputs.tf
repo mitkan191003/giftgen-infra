@@ -50,6 +50,22 @@ output "backend_worker_repository_url" {
   value = aws_ecr_repository.backend_worker.repository_url
 }
 
+output "modal_secret_arn" {
+  value = aws_secretsmanager_secret.modal.arn
+}
+
+output "modal_secret_name" {
+  value = aws_secretsmanager_secret.modal.name
+}
+
+output "openai_secret_arn" {
+  value = aws_secretsmanager_secret.openai.arn
+}
+
+output "openai_secret_name" {
+  value = aws_secretsmanager_secret.openai.name
+}
+
 output "database_endpoint" {
   value = module.postgres.db_instance_endpoint
 }
@@ -71,7 +87,7 @@ output "cognito_user_pool_client_id" {
 }
 
 output "cognito_domain" {
-  value = aws_cognito_user_pool_domain.this.domain
+  value = "https://${aws_cognito_user_pool_domain.this.domain}.auth.${data.aws_region.current.name}.amazoncognito.com"
 }
 
 output "api_certificate_arn" {

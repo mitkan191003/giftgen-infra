@@ -1,3 +1,12 @@
 region            = "us-east-1"
+project           = "giftgen"
+environment       = "dev"
 state_bucket_name = "giftgen-terraform-state"
 core_state_key    = "environments/dev/terraform.tfstate"
+
+application_repo_url        = "https://github.com/your-org/giftgen-backend.git"
+application_target_revision = "main"
+application_chart_path      = "helm/giftgen"
+api_image_tag               = "latest"
+worker_image_tag            = "latest"
+cleanup_schedule            = "0 */6 * * *"
