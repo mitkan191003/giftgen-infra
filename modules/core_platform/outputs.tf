@@ -66,6 +66,22 @@ output "openai_secret_name" {
   value = aws_secretsmanager_secret.openai.name
 }
 
+output "cloudflare_secret_arn" {
+  value = aws_secretsmanager_secret.cloudflare.arn
+}
+
+output "cloudflare_secret_name" {
+  value = aws_secretsmanager_secret.cloudflare.name
+}
+
+output "argocd_github_app_secret_arn" {
+  value = aws_secretsmanager_secret.argocd_github_app.arn
+}
+
+output "argocd_github_app_secret_name" {
+  value = aws_secretsmanager_secret.argocd_github_app.name
+}
+
 output "database_endpoint" {
   value = module.postgres.db_instance_endpoint
 }
@@ -94,10 +110,22 @@ output "api_certificate_arn" {
   value = local.create_api_dns ? aws_acm_certificate_validation.api[0].certificate_arn : null
 }
 
+output "argocd_certificate_arn" {
+  value = local.create_argocd_dns ? aws_acm_certificate_validation.argocd[0].certificate_arn : null
+}
+
 output "frontend_hostname" {
   value = var.frontend_hostname != "" ? var.frontend_hostname : null
 }
 
 output "api_hostname" {
   value = var.api_hostname != "" ? var.api_hostname : null
+}
+
+output "argocd_hostname" {
+  value = local.argocd_hostname != "" ? local.argocd_hostname : null
+}
+
+output "cloudflare_zone_id" {
+  value = var.cloudflare_zone_id != "" ? var.cloudflare_zone_id : null
 }

@@ -19,6 +19,7 @@ module "core_platform" {
   frontend_hostname     = var.frontend_hostname
   frontend_cname_target = var.frontend_cname_target
   api_hostname          = var.api_hostname
+  argocd_hostname       = var.argocd_hostname
   cognito_domain_prefix = var.cognito_domain_prefix
   cognito_callback_urls = var.cognito_callback_urls
   cognito_logout_urls   = var.cognito_logout_urls

@@ -49,6 +49,11 @@ variable "api_hostname" {
   default = ""
 }
 
+variable "argocd_hostname" {
+  type    = string
+  default = ""
+}
+
 variable "cognito_domain_prefix" {
   type = string
 }

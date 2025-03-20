@@ -33,6 +33,8 @@ Use Cloudflare as the authoritative public DNS provider and manage the required 
 
 This keeps DNS and certificates aligned with the user’s actual DNS provider instead of splitting authority between Cloudflare and Route 53.
 
+For Kubernetes-created AWS load balancers, the practical DNS automation path is ExternalDNS with the Cloudflare provider. Terraform creates the zone-level prerequisites and secret containers; in-cluster controllers keep dynamic ALB hostnames mapped to stable Cloudflare records.
+
 ### Scheduled Cleanup
 
 Scheduled cleanup should run as an in-cluster Kubernetes `CronJob` managed by ArgoCD as part of the backend release.
@@ -52,9 +54,12 @@ Provision ACM certificates in Terraform for the backend API. Avoid cert-manager 
 - bootstrap state bucket
 - runtime VPC, EKS, RDS, S3, SQS, ECR, Cognito
 - Cloudflare frontend DNS record management
-- ACM certificate request and Cloudflare DNS validation wiring for the API hostname
+- ACM certificate request and Cloudflare DNS validation wiring for the API and ArgoCD hostnames
 - ArgoCD install and namespace bootstrap
 - backend runtime IRSA for Secrets Manager and S3 access
+- AWS Load Balancer Controller
+- External Secrets
+- ExternalDNS with Cloudflare
 - ArgoCD `AppProject` and `Application` generation for the backend Helm chart when repo inputs are set
 
 Current default cost and compatibility posture:
@@ -65,10 +70,8 @@ Current default cost and compatibility posture:
 
 ## What Still Needs A Follow-Up Infra Pass
 
-- AWS Load Balancer Controller installation
-- the final Cloudflare API record pointing at the live ingress endpoint
-- private repo credential management for ArgoCD if the backend repo is not public
 - image automation details for ArgoCD-managed workloads
+- non-GitHub private repo credential options if GitHub App auth is not the chosen model
 - staging and prod environments
 
 ## Reference Docs

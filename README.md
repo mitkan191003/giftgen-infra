@@ -13,7 +13,7 @@ Terraform for the AWS platform that supports the frontend and backend.
 - `modules/core_platform/`
   - VPC, EKS, RDS, S3, SQS, ECR, Cognito, Cloudflare DNS, and supporting resources
 - `modules/cluster_bootstrap/`
-  - ArgoCD installation, runtime IRSA, and ArgoCD application bootstrap
+  - ArgoCD installation, runtime IRSA, ALB controller, ExternalDNS, External Secrets, and ArgoCD application bootstrap
 
 ## Why Two Environment Phases
 

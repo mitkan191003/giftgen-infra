@@ -37,6 +37,11 @@ variable "application_chart_path" {
   default = "helm/giftgen"
 }
 
+variable "application_value_file" {
+  type    = string
+  default = "values-dev.yaml"
+}
+
 variable "api_image_tag" {
   type    = string
   default = "latest"

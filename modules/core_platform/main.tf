@@ -1,6 +1,8 @@
 locals {
   name                = "${var.project}-${var.environment}"
+  argocd_hostname     = var.argocd_hostname != "" ? var.argocd_hostname : (var.frontend_hostname != "" ? "argocd.${var.frontend_hostname}" : "")
   create_api_dns      = var.cloudflare_zone_id != "" && var.api_hostname != ""
+  create_argocd_dns   = var.cloudflare_zone_id != "" && local.argocd_hostname != ""
   create_frontend_dns = var.cloudflare_zone_id != "" && var.frontend_hostname != "" && var.frontend_cname_target != ""
 }
 
@@ -22,6 +24,14 @@ module "vpc" {
 
   enable_dns_hostnames = true
   enable_dns_support   = true
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = "1"
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = "1"
+  }
 }
 
 module "eks" {
@@ -229,6 +239,12 @@ resource "aws_acm_certificate" "api" {
   validation_method = "DNS"
 }
 
+resource "aws_acm_certificate" "argocd" {
+  count             = local.create_argocd_dns ? 1 : 0
+  domain_name       = local.argocd_hostname
+  validation_method = "DNS"
+}
+
 resource "cloudflare_dns_record" "frontend" {
   count = local.create_frontend_dns ? 1 : 0
 
@@ -260,11 +276,37 @@ resource "cloudflare_dns_record" "api_validation" {
   comment = "ACM validation for ${var.api_hostname}"
 }
 
+resource "cloudflare_dns_record" "argocd_validation" {
+  for_each = local.create_argocd_dns ? {
+    for option in aws_acm_certificate.argocd[0].domain_validation_options :
+    option.domain_name => {
+      name   = trimsuffix(option.resource_record_name, ".")
+      record = trimsuffix(option.resource_record_value, ".")
+      type   = option.resource_record_type
+    }
+  } : {}
+
+  zone_id = var.cloudflare_zone_id
+  name    = each.value.name
+  type    = each.value.type
+  content = each.value.record
+  ttl     = 60
+  proxied = false
+  comment = "ACM validation for ${local.argocd_hostname}"
+}
+
 resource "aws_acm_certificate_validation" "api" {
   count = local.create_api_dns ? 1 : 0
 
   certificate_arn         = aws_acm_certificate.api[0].arn
   validation_record_fqdns = [for record in cloudflare_dns_record.api_validation : record.name]
+}
+
+resource "aws_acm_certificate_validation" "argocd" {
+  count = local.create_argocd_dns ? 1 : 0
+
+  certificate_arn         = aws_acm_certificate.argocd[0].arn
+  validation_record_fqdns = [for record in cloudflare_dns_record.argocd_validation : record.name]
 }
 
 resource "aws_secretsmanager_secret" "modal" {
@@ -273,4 +315,12 @@ resource "aws_secretsmanager_secret" "modal" {
 
 resource "aws_secretsmanager_secret" "openai" {
   name = "${local.name}/openai"
+}
+
+resource "aws_secretsmanager_secret" "cloudflare" {
+  name = "${local.name}/cloudflare"
+}
+
+resource "aws_secretsmanager_secret" "argocd_github_app" {
+  name = "${local.name}/argocd-github-app"
 }
