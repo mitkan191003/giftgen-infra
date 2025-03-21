@@ -11,7 +11,7 @@ cloudflare_zone_id    = "your-cloudflare-zone-id"
 frontend_hostname     = "dev.giftgen.mithrak.com"
 frontend_cname_target = "cname.vercel-dns.com"
 api_hostname          = "api-dev.giftgen.mithrak.com"
-argocd_hostname       = "argocd.dev.giftgen.mithrak.com"
+argocd_hostname       = "argocd-dev.giftgen.mithrak.com"
 cognito_domain_prefix = "giftgen-dev-auth-mithrak"
 
 cognito_callback_urls = [

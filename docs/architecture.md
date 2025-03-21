@@ -14,8 +14,13 @@ Recommended hostname layout:
 - Prod API: `api.giftgen.mithrak.com`
 - Dev API: `api-dev.giftgen.mithrak.com`
 - Staging API: `api-staging.giftgen.mithrak.com`
+- Prod ArgoCD: `argocd.giftgen.mithrak.com`
+- Dev ArgoCD: `argocd-dev.giftgen.mithrak.com`
+- Staging ArgoCD: `argocd-staging.giftgen.mithrak.com`
 
 Vercel preview deployments still matter for PR review, but they are not the source of truth for deployed environments because Cognito callback URLs need to be exact and stable.
+
+Do not hang AWS-managed endpoints off a frontend hostname that is itself a Vercel `CNAME`. A name like `argocd.dev.giftgen.mithrak.com` inherits the `dev.giftgen.mithrak.com` branch, which is delegated to Vercel. Use sibling labels like `argocd-dev.giftgen.mithrak.com` and `api-dev.giftgen.mithrak.com` instead.
 
 If a single Vercel project cannot provide enough stable non-production environments on the chosen plan, use multiple Vercel projects. The infrastructure requirement is stable hostnames per environment, not a single Vercel project.
 
@@ -60,7 +65,7 @@ Provision ACM certificates in Terraform for the backend API. Avoid cert-manager 
 - AWS Load Balancer Controller
 - External Secrets
 - ExternalDNS with Cloudflare
-- ArgoCD `AppProject` and `Application` generation for the backend Helm chart when repo inputs are set
+- a separate GitOps Terraform phase for `ClusterSecretStore`, `ExternalSecret`, ArgoCD `AppProject`, and ArgoCD `Application`
 
 Current default cost and compatibility posture:
 

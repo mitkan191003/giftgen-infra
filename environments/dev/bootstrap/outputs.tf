@@ -25,3 +25,23 @@ output "external_dns_namespace" {
 output "external_secrets_namespace" {
   value = module.cluster_bootstrap.external_secrets_namespace
 }
+
+output "application_repo_url" {
+  value = var.application_repo_url
+}
+
+output "application_target_revision" {
+  value = var.application_target_revision
+}
+
+output "application_chart_path" {
+  value = var.application_chart_path
+}
+
+output "application_value_file" {
+  value = var.application_value_file
+}
+
+output "cleanup_schedule" {
+  value = var.cleanup_schedule
+}
