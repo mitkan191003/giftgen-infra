@@ -110,6 +110,10 @@ output "database_endpoint" {
   value = module.postgres.db_instance_endpoint
 }
 
+output "database_instance_identifier" {
+  value = module.postgres.db_instance_identifier
+}
+
 output "database_name" {
   value = var.db_name
 }

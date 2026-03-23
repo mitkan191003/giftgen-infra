@@ -6,6 +6,11 @@ vpc_cidr        = "10.20.0.0/16"
 azs             = ["us-east-1a", "us-east-1b", "us-east-1c"]
 public_subnets  = ["10.20.0.0/20", "10.20.16.0/20", "10.20.32.0/20"]
 private_subnets = ["10.20.128.0/20", "10.20.144.0/20", "10.20.160.0/20"]
+node_instance_types = ["t4g.small"]
+node_ami_type       = "AL2023_ARM_64_STANDARD"
+node_desired_size   = 3
+node_min_size       = 3
+node_max_size       = 6
 
 cloudflare_zone_id    = "your-cloudflare-zone-id"
 frontend_hostname     = "dev.giftgen.mithrak.com"

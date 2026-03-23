@@ -10,10 +10,15 @@ module "core_platform" {
   project     = var.project
   environment = var.environment
 
-  vpc_cidr        = var.vpc_cidr
-  azs             = var.azs
-  public_subnets  = var.public_subnets
-  private_subnets = var.private_subnets
+  vpc_cidr            = var.vpc_cidr
+  azs                 = var.azs
+  public_subnets      = var.public_subnets
+  private_subnets     = var.private_subnets
+  node_instance_types = var.node_instance_types
+  node_ami_type       = var.node_ami_type
+  node_desired_size   = var.node_desired_size
+  node_min_size       = var.node_min_size
+  node_max_size       = var.node_max_size
 
   cloudflare_zone_id                 = var.cloudflare_zone_id
   frontend_hostname                  = var.frontend_hostname

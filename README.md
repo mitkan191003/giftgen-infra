@@ -20,6 +20,8 @@ Terraform for the AWS platform that supports the frontend and backend.
   - ArgoCD installation, namespaces, runtime IRSA, ALB controller, ExternalDNS, and External Secrets
 - `modules/cluster_gitops/`
   - ClusterSecretStore, ExternalSecrets, ArgoCD AppProject, and ArgoCD Application resources
+- `modules/observability/`
+  - CloudWatch Observability add-on, ALB access-log bucket, dashboard, alarms, SNS topic, and public API canary
 
 ## Why Three Environment Phases
 

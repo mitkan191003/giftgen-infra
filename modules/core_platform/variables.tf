@@ -8,7 +8,7 @@ variable "environment" {
 
 variable "cluster_version" {
   type    = string
-  default = "1.32"
+  default = "1.33"
 }
 
 variable "vpc_cidr" {
@@ -46,12 +46,12 @@ variable "node_ami_type" {
 
 variable "node_desired_size" {
   type    = number
-  default = 2
+  default = 3
 }
 
 variable "node_min_size" {
   type    = number
-  default = 2
+  default = 3
 }
 
 variable "node_max_size" {

@@ -67,10 +67,17 @@ module "cluster_gitops" {
   api_hostname                  = coalesce(try(data.terraform_remote_state.core.outputs.api_hostname, null), "")
   api_certificate_arn           = coalesce(try(data.terraform_remote_state.core.outputs.api_certificate_arn, null), "")
 
-  application_repo_url        = data.terraform_remote_state.bootstrap.outputs.application_repo_url
-  application_target_revision = data.terraform_remote_state.bootstrap.outputs.application_target_revision
-  application_chart_path      = data.terraform_remote_state.bootstrap.outputs.application_chart_path
-  application_value_file      = data.terraform_remote_state.bootstrap.outputs.application_value_file
-  application_auto_sync       = data.terraform_remote_state.bootstrap.outputs.application_auto_sync
-  cleanup_schedule            = data.terraform_remote_state.bootstrap.outputs.cleanup_schedule
+  application_repo_url              = data.terraform_remote_state.bootstrap.outputs.application_repo_url
+  application_target_revision       = data.terraform_remote_state.bootstrap.outputs.application_target_revision
+  application_chart_path            = data.terraform_remote_state.bootstrap.outputs.application_chart_path
+  application_value_file            = data.terraform_remote_state.bootstrap.outputs.application_value_file
+  application_auto_sync             = data.terraform_remote_state.bootstrap.outputs.application_auto_sync
+  cleanup_schedule                  = data.terraform_remote_state.bootstrap.outputs.cleanup_schedule
+  metric_namespace                  = data.terraform_remote_state.bootstrap.outputs.metric_namespace
+  backend_log_level                 = data.terraform_remote_state.bootstrap.outputs.backend_log_level
+  backend_request_id_header_name    = data.terraform_remote_state.bootstrap.outputs.backend_request_id_header_name
+  backend_sentry_dsn                = data.terraform_remote_state.bootstrap.outputs.backend_sentry_dsn
+  backend_sentry_traces_sample_rate = data.terraform_remote_state.bootstrap.outputs.backend_sentry_traces_sample_rate
+  alb_access_logs_bucket_name       = data.terraform_remote_state.bootstrap.outputs.alb_access_logs_bucket_name
+  alb_access_logs_prefix            = data.terraform_remote_state.bootstrap.outputs.alb_access_logs_prefix
 }

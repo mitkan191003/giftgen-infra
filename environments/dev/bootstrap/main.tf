@@ -71,3 +71,25 @@ module "cluster_bootstrap" {
   application_value_file      = var.application_value_file
   cleanup_schedule            = var.cleanup_schedule
 }
+
+module "observability" {
+  source = "../../../modules/observability"
+
+  project                      = var.project
+  environment                  = var.environment
+  region                       = var.region
+  cluster_name                 = data.terraform_remote_state.core.outputs.cluster_name
+  cluster_oidc_issuer_url      = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
+  oidc_provider_arn            = data.terraform_remote_state.core.outputs.oidc_provider_arn
+  api_hostname                 = coalesce(try(data.terraform_remote_state.core.outputs.api_hostname, null), "")
+  assets_bucket_name           = data.terraform_remote_state.core.outputs.assets_bucket_name
+  database_instance_identifier = data.terraform_remote_state.core.outputs.database_instance_identifier
+
+  metric_namespace                = var.metric_namespace
+  log_retention_days              = var.observability_log_retention_days
+  alb_access_logs_retention_days  = var.alb_access_logs_retention_days
+  canary_artifacts_retention_days = var.canary_artifacts_retention_days
+  enable_api_canary               = var.enable_api_canary
+  api_canary_schedule_expression  = var.api_canary_schedule_expression
+  notification_email              = var.alert_email
+}

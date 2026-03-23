@@ -125,3 +125,28 @@ variable "argocd_application_name" {
   type    = string
   default = "giftgen"
 }
+
+variable "node_instance_types" {
+  type    = list(string)
+  default = ["t4g.small"]
+}
+
+variable "node_ami_type" {
+  type    = string
+  default = "AL2023_ARM_64_STANDARD"
+}
+
+variable "node_desired_size" {
+  type    = number
+  default = 3
+}
+
+variable "node_min_size" {
+  type    = number
+  default = 3
+}
+
+variable "node_max_size" {
+  type    = number
+  default = 6
+}

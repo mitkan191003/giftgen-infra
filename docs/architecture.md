@@ -69,12 +69,29 @@ Automatic Git write-back is still possible later, but it is not part of the curr
 
 Provision ACM certificates in Terraform for the backend API. Avoid cert-manager for the first production pass so there is no separate in-cluster certificate IAM story to bootstrap manually.
 
+### Observability
+
+Use an AWS-first observability baseline:
+
+- Amazon CloudWatch Observability EKS add-on for cluster logs and baseline EKS telemetry
+- CloudWatch Logs for centralized application and cluster logs
+- CloudWatch Embedded Metric Format for application metrics emitted by the API, worker, and cleanup job
+- CloudWatch dashboard and alarms for service, RDS, and S3 views
+- CloudWatch Synthetics canary for the public API hostname
+- ALB access logs written to S3
+- Sentry for frontend and backend exception visibility
+
+This keeps the first production pass manageable and directly aligned with the spec. Prometheus and Grafana can still be layered on later if stronger Kubernetes-native querying becomes necessary.
+
 ## What Is Included In This Scaffold
 
 - bootstrap state bucket
 - runtime VPC, EKS, RDS, S3, SQS, ECR, Cognito
 - optional CodeConnections, CodePipeline, CodeBuild, and ECR lifecycle policy resources for backend image delivery
 - optional ArgoCD refresh stage inside the backend delivery pipeline
+- CloudWatch Observability EKS add-on
+- CloudWatch dashboard, alarms, SNS topic, and API uptime canary
+- ALB access-log bucket
 - Cloudflare frontend DNS record management
 - ACM certificate request and Cloudflare DNS validation wiring for the API and ArgoCD hostnames
 - ArgoCD install and namespace bootstrap
@@ -87,12 +104,15 @@ Provision ACM certificates in Terraform for the backend API. Avoid cert-manager 
 Current default cost and compatibility posture:
 
 - The default EKS node group is `t4g.small` on ARM64 Amazon Linux 2023 to fit lower-cost development accounts.
+- The dev environment overrides that generic default to `3 x t4g.small` because the current controller set plus the CloudWatch Observability add-on does not fit on two 11-pod nodes.
 - The default RDS backup retention period is `0` so database creation succeeds on constrained AWS account plans.
 - Existing Cloudflare frontend and ACM validation records still need to be absent or imported into Terraform if they were created outside Terraform.
 
 ## What Still Needs A Follow-Up Infra Pass
 
 - non-GitHub private repo credential options if GitHub App auth is not the chosen model
+- Prometheus and Grafana if CloudWatch dashboards and Logs Insights stop being sufficient
+- richer distributed tracing across frontend, API, worker, and external providers
 - staging and prod environments
 
 ## Reference Docs
@@ -107,3 +127,7 @@ Current default cost and compatibility posture:
 - Vercel access control: https://vercel.com/docs/security/access-control
 - Kubernetes CronJob: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/
 - Argo CD automated sync: https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/
+- CloudWatch Observability EKS add-on: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-EKS-addon.html
+- CloudWatch Application Signals for EKS: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Application-Signals-Enable-EKS.html
+- ALB access logs: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
+- CloudWatch Synthetics: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries.html

@@ -55,6 +55,10 @@ output "database_endpoint" {
   value = module.core_platform.database_endpoint
 }
 
+output "database_instance_identifier" {
+  value = module.core_platform.database_instance_identifier
+}
+
 output "database_secret_arn" {
   value = module.core_platform.database_secret_arn
 }

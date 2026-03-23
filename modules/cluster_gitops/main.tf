@@ -10,18 +10,24 @@ locals {
   share_base_url         = var.frontend_hostname != "" ? "https://${var.frontend_hostname}/share" : ""
   app_enabled            = var.application_repo_url != ""
   ingress_enabled        = var.api_hostname != "" && var.api_certificate_arn != ""
+  access_logs_enabled    = var.alb_access_logs_bucket_name != ""
   application_value_file = var.application_value_file != "" ? var.application_value_file : "values-${var.environment}.yaml"
 
-  api_ingress_annotations = local.ingress_enabled ? {
-    "alb.ingress.kubernetes.io/scheme"                    = "internet-facing"
-    "alb.ingress.kubernetes.io/target-type"               = "ip"
-    "alb.ingress.kubernetes.io/listen-ports"              = "[{\"HTTP\":80},{\"HTTPS\":443}]"
-    "alb.ingress.kubernetes.io/ssl-redirect"              = "443"
-    "alb.ingress.kubernetes.io/certificate-arn"           = var.api_certificate_arn
-    "alb.ingress.kubernetes.io/healthcheck-path"          = "/healthz"
-    "external-dns.alpha.kubernetes.io/hostname"           = var.api_hostname
-    "external-dns.alpha.kubernetes.io/cloudflare-proxied" = "false"
-  } : {}
+  api_ingress_annotations = local.ingress_enabled ? merge(
+    {
+      "alb.ingress.kubernetes.io/scheme"                    = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type"               = "ip"
+      "alb.ingress.kubernetes.io/listen-ports"              = "[{\"HTTP\":80},{\"HTTPS\":443}]"
+      "alb.ingress.kubernetes.io/ssl-redirect"              = "443"
+      "alb.ingress.kubernetes.io/certificate-arn"           = var.api_certificate_arn
+      "alb.ingress.kubernetes.io/healthcheck-path"          = "/healthz"
+      "external-dns.alpha.kubernetes.io/hostname"           = var.api_hostname
+      "external-dns.alpha.kubernetes.io/cloudflare-proxied" = "false"
+    },
+    local.access_logs_enabled ? {
+      "alb.ingress.kubernetes.io/load-balancer-attributes" = "access_logs.s3.enabled=true,access_logs.s3.bucket=${var.alb_access_logs_bucket_name},access_logs.s3.prefix=${var.alb_access_logs_prefix}"
+    } : {}
+  ) : {}
 
   application_values = {
     serviceAccount = {
@@ -33,6 +39,11 @@ locals {
     }
     config = {
       environment               = local.environment_name
+      logLevel                  = var.backend_log_level
+      metricNamespace           = var.metric_namespace
+      requestIdHeaderName       = var.backend_request_id_header_name
+      sentryDsn                 = var.backend_sentry_dsn
+      sentryTracesSampleRate    = var.backend_sentry_traces_sample_rate
       authMode                  = "cognito"
       corsOrigins               = compact([local.frontend_origin])
       publicShareBaseUrl        = local.share_base_url

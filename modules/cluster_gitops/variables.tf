@@ -150,3 +150,38 @@ variable "cleanup_schedule" {
   type    = string
   default = "0 */6 * * *"
 }
+
+variable "metric_namespace" {
+  type    = string
+  default = "GiftGen/Application"
+}
+
+variable "backend_log_level" {
+  type    = string
+  default = "INFO"
+}
+
+variable "backend_request_id_header_name" {
+  type    = string
+  default = "X-Request-Id"
+}
+
+variable "backend_sentry_dsn" {
+  type    = string
+  default = ""
+}
+
+variable "backend_sentry_traces_sample_rate" {
+  type    = number
+  default = 0.1
+}
+
+variable "alb_access_logs_bucket_name" {
+  type    = string
+  default = ""
+}
+
+variable "alb_access_logs_prefix" {
+  type    = string
+  default = ""
+}
