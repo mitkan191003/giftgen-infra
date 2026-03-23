@@ -15,14 +15,19 @@ module "core_platform" {
   public_subnets  = var.public_subnets
   private_subnets = var.private_subnets
 
-  cloudflare_zone_id    = var.cloudflare_zone_id
-  frontend_hostname     = var.frontend_hostname
-  frontend_cname_target = var.frontend_cname_target
-  api_hostname          = var.api_hostname
-  argocd_hostname       = var.argocd_hostname
-  cognito_domain_prefix = var.cognito_domain_prefix
-  cognito_callback_urls = var.cognito_callback_urls
-  cognito_logout_urls   = var.cognito_logout_urls
+  cloudflare_zone_id                 = var.cloudflare_zone_id
+  frontend_hostname                  = var.frontend_hostname
+  frontend_cname_target              = var.frontend_cname_target
+  api_hostname                       = var.api_hostname
+  argocd_hostname                    = var.argocd_hostname
+  cognito_domain_prefix              = var.cognito_domain_prefix
+  cognito_callback_urls              = var.cognito_callback_urls
+  cognito_logout_urls                = var.cognito_logout_urls
+  cognito_password_minimum_length    = var.cognito_password_minimum_length
+  cognito_password_require_lowercase = var.cognito_password_require_lowercase
+  cognito_password_require_uppercase = var.cognito_password_require_uppercase
+  cognito_password_require_numbers   = var.cognito_password_require_numbers
+  cognito_password_require_symbols   = var.cognito_password_require_symbols
 }
 
 module "backend_delivery" {

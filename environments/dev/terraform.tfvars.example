@@ -22,6 +22,12 @@ cognito_logout_urls = [
   "https://dev.giftgen.mithrak.com"
 ]
 
+cognito_password_minimum_length    = 7
+cognito_password_require_lowercase = false
+cognito_password_require_uppercase = false
+cognito_password_require_numbers   = true
+cognito_password_require_symbols   = false
+
 enable_backend_delivery     = true
 backend_repository_full_name = "mitkan191003/giftgen-backend"
 backend_repository_branch    = "main"

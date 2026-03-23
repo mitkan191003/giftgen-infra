@@ -66,6 +66,31 @@ variable "cognito_logout_urls" {
   type = list(string)
 }
 
+variable "cognito_password_minimum_length" {
+  type    = number
+  default = 7
+}
+
+variable "cognito_password_require_lowercase" {
+  type    = bool
+  default = false
+}
+
+variable "cognito_password_require_uppercase" {
+  type    = bool
+  default = false
+}
+
+variable "cognito_password_require_numbers" {
+  type    = bool
+  default = true
+}
+
+variable "cognito_password_require_symbols" {
+  type    = bool
+  default = false
+}
+
 variable "enable_backend_delivery" {
   type    = bool
   default = false
