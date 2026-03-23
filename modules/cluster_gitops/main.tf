@@ -40,6 +40,7 @@ locals {
       assetStorageMode          = "s3"
       assetBucketName           = var.assets_bucket_name
       databaseName              = var.database_name
+      databaseEndpoint          = var.database_endpoint
       databaseSecretId          = var.database_secret_arn
       modalSecretId             = var.modal_secret_arn
       openaiSecretId            = var.openai_secret_arn
@@ -98,16 +99,26 @@ locals {
     }
   }
 
+  application_auto_sync_options = var.application_auto_sync ? tomap({
+    automated = {
+      prune    = true
+      selfHeal = true
+    }
+    retry = {
+      limit = 10
+      backoff = {
+        duration    = "30s"
+        factor      = 2
+        maxDuration = "10m"
+      }
+    }
+  }) : tomap({})
+
   application_sync_policy = merge(
     {
       syncOptions = ["CreateNamespace=true"]
     },
-    var.application_auto_sync ? {
-      automated = {
-        prune    = true
-        selfHeal = true
-      }
-    } : {}
+    local.application_auto_sync_options,
   )
 }
 
@@ -277,6 +288,11 @@ resource "kubernetes_manifest" "application_project" {
 
 resource "kubernetes_manifest" "application" {
   count = local.app_enabled ? 1 : 0
+
+  computed_fields = [
+    "spec.source.targetRevision",
+    "spec.source.helm.parameters",
+  ]
 
   manifest = {
     apiVersion = "argoproj.io/v1alpha1"

@@ -53,6 +53,7 @@ module "cluster_gitops" {
   backend_api_repository_url    = data.terraform_remote_state.core.outputs.backend_api_repository_url
   backend_worker_repository_url = data.terraform_remote_state.core.outputs.backend_worker_repository_url
   database_name                 = data.terraform_remote_state.core.outputs.database_name
+  database_endpoint             = data.terraform_remote_state.core.outputs.database_endpoint
   database_secret_arn           = data.terraform_remote_state.core.outputs.database_secret_arn
   modal_secret_arn              = data.terraform_remote_state.core.outputs.modal_secret_arn
   openai_secret_arn             = data.terraform_remote_state.core.outputs.openai_secret_arn
@@ -70,6 +71,6 @@ module "cluster_gitops" {
   application_target_revision = data.terraform_remote_state.bootstrap.outputs.application_target_revision
   application_chart_path      = data.terraform_remote_state.bootstrap.outputs.application_chart_path
   application_value_file      = data.terraform_remote_state.bootstrap.outputs.application_value_file
+  application_auto_sync       = data.terraform_remote_state.bootstrap.outputs.application_auto_sync
   cleanup_schedule            = data.terraform_remote_state.bootstrap.outputs.cleanup_schedule
 }
-

@@ -46,8 +46,24 @@ output "backend_api_repository_url" {
   value = aws_ecr_repository.backend_api.repository_url
 }
 
+output "backend_api_repository_name" {
+  value = aws_ecr_repository.backend_api.name
+}
+
+output "backend_api_repository_arn" {
+  value = aws_ecr_repository.backend_api.arn
+}
+
 output "backend_worker_repository_url" {
   value = aws_ecr_repository.backend_worker.repository_url
+}
+
+output "backend_worker_repository_name" {
+  value = aws_ecr_repository.backend_worker.name
+}
+
+output "backend_worker_repository_arn" {
+  value = aws_ecr_repository.backend_worker.arn
 }
 
 output "modal_secret_arn" {
@@ -80,6 +96,14 @@ output "argocd_github_app_secret_arn" {
 
 output "argocd_github_app_secret_name" {
   value = aws_secretsmanager_secret.argocd_github_app.name
+}
+
+output "argocd_deploy_secret_arn" {
+  value = aws_secretsmanager_secret.argocd_deploy.arn
+}
+
+output "argocd_deploy_secret_name" {
+  value = aws_secretsmanager_secret.argocd_deploy.name
 }
 
 output "database_endpoint" {

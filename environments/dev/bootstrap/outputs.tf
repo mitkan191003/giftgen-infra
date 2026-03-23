@@ -42,6 +42,10 @@ output "application_value_file" {
   value = var.application_value_file
 }
 
+output "application_auto_sync" {
+  value = var.application_auto_sync
+}
+
 output "cleanup_schedule" {
   value = var.cleanup_schedule
 }

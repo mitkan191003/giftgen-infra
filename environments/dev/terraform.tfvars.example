@@ -21,3 +21,10 @@ cognito_callback_urls = [
 cognito_logout_urls = [
   "https://dev.giftgen.mithrak.com"
 ]
+
+enable_backend_delivery     = true
+backend_repository_full_name = "mitkan191003/giftgen-backend"
+backend_repository_branch    = "main"
+backend_connection_name      = "giftgen-dev-backend"
+enable_argocd_refresh        = true
+argocd_application_name      = "giftgen"

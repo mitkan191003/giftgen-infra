@@ -42,14 +42,9 @@ variable "application_value_file" {
   default = "values-dev.yaml"
 }
 
-variable "api_image_tag" {
-  type    = string
-  default = "latest"
-}
-
-variable "worker_image_tag" {
-  type    = string
-  default = "latest"
+variable "application_auto_sync" {
+  type    = bool
+  default = false
 }
 
 variable "cleanup_schedule" {

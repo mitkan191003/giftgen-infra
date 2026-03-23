@@ -183,16 +183,6 @@ variable "application_auto_sync" {
   default = true
 }
 
-variable "api_image_tag" {
-  type    = string
-  default = "latest"
-}
-
-variable "worker_image_tag" {
-  type    = string
-  default = "latest"
-}
-
 variable "worker_poll_interval_seconds" {
   type    = number
   default = 10

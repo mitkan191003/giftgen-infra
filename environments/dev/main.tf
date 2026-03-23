@@ -24,3 +24,29 @@ module "core_platform" {
   cognito_callback_urls = var.cognito_callback_urls
   cognito_logout_urls   = var.cognito_logout_urls
 }
+
+module "backend_delivery" {
+  count  = var.enable_backend_delivery ? 1 : 0
+  source = "../../modules/backend_delivery"
+
+  project     = var.project
+  environment = var.environment
+  region      = var.region
+
+  github_repository_full_name = var.backend_repository_full_name
+  github_repository_branch    = var.backend_repository_branch
+  github_connection_arn       = var.backend_connection_arn
+  github_connection_name      = var.backend_connection_name
+
+  enable_argocd_refresh   = var.enable_argocd_refresh
+  argocd_server           = module.core_platform.argocd_hostname != null ? "https://${module.core_platform.argocd_hostname}" : ""
+  argocd_application_name = var.argocd_application_name
+
+  backend_api_repository_url  = module.core_platform.backend_api_repository_url
+  backend_api_repository_name = module.core_platform.backend_api_repository_name
+  backend_api_repository_arn  = module.core_platform.backend_api_repository_arn
+
+  backend_worker_repository_url  = module.core_platform.backend_worker_repository_url
+  backend_worker_repository_name = module.core_platform.backend_worker_repository_name
+  backend_worker_repository_arn  = module.core_platform.backend_worker_repository_arn
+}

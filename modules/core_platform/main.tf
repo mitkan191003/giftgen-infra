@@ -324,3 +324,7 @@ resource "aws_secretsmanager_secret" "cloudflare" {
 resource "aws_secretsmanager_secret" "argocd_github_app" {
   name = "${local.name}/argocd-github-app"
 }
+
+resource "aws_secretsmanager_secret" "argocd_deploy" {
+  name = "${local.name}/argocd-deploy"
+}

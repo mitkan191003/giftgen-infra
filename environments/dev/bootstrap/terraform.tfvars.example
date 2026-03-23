@@ -8,4 +8,5 @@ application_repo_url        = "https://github.com/your-org/giftgen-backend.git"
 application_target_revision = "main"
 application_chart_path      = "helm/giftgen"
 application_value_file      = "values-dev.yaml"
+application_auto_sync       = false
 cleanup_schedule            = "0 */6 * * *"

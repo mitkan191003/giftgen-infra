@@ -65,3 +65,38 @@ variable "cognito_callback_urls" {
 variable "cognito_logout_urls" {
   type = list(string)
 }
+
+variable "enable_backend_delivery" {
+  type    = bool
+  default = false
+}
+
+variable "backend_repository_full_name" {
+  type    = string
+  default = ""
+}
+
+variable "backend_repository_branch" {
+  type    = string
+  default = "main"
+}
+
+variable "backend_connection_arn" {
+  type    = string
+  default = ""
+}
+
+variable "backend_connection_name" {
+  type    = string
+  default = ""
+}
+
+variable "enable_argocd_refresh" {
+  type    = bool
+  default = false
+}
+
+variable "argocd_application_name" {
+  type    = string
+  default = "giftgen"
+}

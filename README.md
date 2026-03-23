@@ -14,6 +14,8 @@ Terraform for the AWS platform that supports the frontend and backend.
   - CRD-backed GitOps resources that depend on the core and bootstrap state
 - `modules/core_platform/`
   - VPC, EKS, RDS, S3, SQS, ECR, Cognito, Cloudflare DNS, and supporting resources
+- `modules/backend_delivery/`
+  - CodeConnections, CodePipeline, CodeBuild, artifact storage, and ECR lifecycle policy resources for backend image delivery
 - `modules/cluster_bootstrap/`
   - ArgoCD installation, namespaces, runtime IRSA, ALB controller, ExternalDNS, and External Secrets
 - `modules/cluster_gitops/`
@@ -30,6 +32,15 @@ Trying to create EKS and immediately use the Kubernetes, Helm, and CRD-backed ma
 That still satisfies the “no kubectl bootstrap steps” requirement while keeping Terraform predictable.
 
 Cleanup is no longer modeled as a Terraform-managed EventBridge or Lambda path. The intended scheduled cleanup path is an ArgoCD-managed Kubernetes `CronJob` that lives in the backend Helm release.
+
+Backend image delivery can now also be managed in AWS:
+
+1. GitHub source via CodeConnections
+2. image build and ECR push via CodeBuild, tagged with the source commit SHA
+3. optional second CodeBuild stage that updates ArgoCD to that same commit SHA and forces a sync
+4. GitOps deployment via ArgoCD using the repo commit and Helm parameter overrides selected by the pipeline
+
+Manual version bump commits are no longer required for the dev delivery path. Automatic Git write-back is still intentionally out of scope.
 
 ## Intended Apply Order
 

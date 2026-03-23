@@ -69,7 +69,5 @@ module "cluster_bootstrap" {
   application_target_revision = var.application_target_revision
   application_chart_path      = var.application_chart_path
   application_value_file      = var.application_value_file
-  api_image_tag               = var.api_image_tag
-  worker_image_tag            = var.worker_image_tag
   cleanup_schedule            = var.cleanup_schedule
 }

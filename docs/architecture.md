@@ -50,6 +50,21 @@ This is a better fit than `EventBridge Scheduler -> Lambda -> Kubernetes Job` be
 - image updates can follow normal GitOps instead of Terraform variables
 - there is no separate Lambda IAM and EKS RBAC bridge to bootstrap
 
+### Backend Delivery
+
+Use AWS CodeConnections + CodePipeline + CodeBuild for backend image publishing.
+
+The intended release flow is:
+
+- CodePipeline watches the private backend repo branch
+- the source action exposes the Git commit SHA
+- CodeBuild builds the API and worker images and tags them with that same commit SHA
+- optionally, a second CodeBuild stage authenticates to ArgoCD, sets the `Application` revision and Helm image-tag overrides to that same commit SHA, and waits for the sync to finish
+
+This keeps image publishing in AWS and avoids manual version bump commits for the dev release path.
+
+Automatic Git write-back is still possible later, but it is not part of the current design because the current delivery path no longer needs version bump commits to release dev.
+
 ### TLS And Ingress
 
 Provision ACM certificates in Terraform for the backend API. Avoid cert-manager for the first production pass so there is no separate in-cluster certificate IAM story to bootstrap manually.
@@ -58,6 +73,8 @@ Provision ACM certificates in Terraform for the backend API. Avoid cert-manager 
 
 - bootstrap state bucket
 - runtime VPC, EKS, RDS, S3, SQS, ECR, Cognito
+- optional CodeConnections, CodePipeline, CodeBuild, and ECR lifecycle policy resources for backend image delivery
+- optional ArgoCD refresh stage inside the backend delivery pipeline
 - Cloudflare frontend DNS record management
 - ACM certificate request and Cloudflare DNS validation wiring for the API and ArgoCD hostnames
 - ArgoCD install and namespace bootstrap
@@ -75,7 +92,6 @@ Current default cost and compatibility posture:
 
 ## What Still Needs A Follow-Up Infra Pass
 
-- image automation details for ArgoCD-managed workloads
 - non-GitHub private repo credential options if GitHub App auth is not the chosen model
 - staging and prod environments
 
