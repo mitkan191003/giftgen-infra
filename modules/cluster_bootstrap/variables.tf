@@ -70,14 +70,6 @@ variable "assets_bucket_name" {
   type = string
 }
 
-variable "backend_api_repository_url" {
-  type = string
-}
-
-variable "backend_worker_repository_url" {
-  type = string
-}
-
 variable "database_name" {
   type = string
 }

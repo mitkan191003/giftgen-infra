@@ -23,30 +23,6 @@ output "assets_bucket_name" {
   value = module.core_platform.assets_bucket_name
 }
 
-output "backend_api_repository_url" {
-  value = module.core_platform.backend_api_repository_url
-}
-
-output "backend_api_repository_name" {
-  value = module.core_platform.backend_api_repository_name
-}
-
-output "backend_api_repository_arn" {
-  value = module.core_platform.backend_api_repository_arn
-}
-
-output "backend_worker_repository_url" {
-  value = module.core_platform.backend_worker_repository_url
-}
-
-output "backend_worker_repository_name" {
-  value = module.core_platform.backend_worker_repository_name
-}
-
-output "backend_worker_repository_arn" {
-  value = module.core_platform.backend_worker_repository_arn
-}
-
 output "database_name" {
   value = module.core_platform.database_name
 }
@@ -129,28 +105,4 @@ output "argocd_hostname" {
 
 output "cloudflare_zone_id" {
   value = module.core_platform.cloudflare_zone_id
-}
-
-output "backend_delivery_connection_arn" {
-  value = var.enable_backend_delivery ? module.backend_delivery[0].github_connection_arn : null
-}
-
-output "backend_delivery_connection_status" {
-  value = var.enable_backend_delivery ? module.backend_delivery[0].github_connection_status : null
-}
-
-output "backend_delivery_codebuild_project_name" {
-  value = var.enable_backend_delivery ? module.backend_delivery[0].codebuild_project_name : null
-}
-
-output "backend_delivery_deploy_codebuild_project_name" {
-  value = var.enable_backend_delivery ? module.backend_delivery[0].deploy_codebuild_project_name : null
-}
-
-output "backend_delivery_codepipeline_name" {
-  value = var.enable_backend_delivery ? module.backend_delivery[0].codepipeline_name : null
-}
-
-output "backend_delivery_artifact_bucket_name" {
-  value = var.enable_backend_delivery ? module.backend_delivery[0].artifact_bucket_name : null
 }

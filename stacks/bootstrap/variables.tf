@@ -19,7 +19,7 @@ variable "state_bucket_name" {
 
 variable "core_state_key" {
   type    = string
-  default = "environments/dev/terraform.tfstate"
+  default = ""
 }
 
 variable "application_repo_url" {
@@ -39,7 +39,7 @@ variable "application_chart_path" {
 
 variable "application_value_file" {
   type    = string
-  default = "values-dev.yaml"
+  default = ""
 }
 
 variable "application_auto_sync" {

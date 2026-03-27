@@ -1,8 +1,7 @@
 locals {
   runtime_environment = {
-    dev     = "development"
-    staging = "staging"
-    prod    = "production"
+    dev  = "development"
+    prod = "production"
   }
 
   environment_name       = lookup(local.runtime_environment, var.environment, var.environment)

@@ -1,0 +1,7 @@
+region                    = "us-east-1"
+project                   = "giftgen"
+environment               = "dev"
+state_bucket_name         = "giftgen-terraform-state"
+core_state_key            = "environments/dev/terraform.tfstate"
+bootstrap_state_key       = "environments/dev/bootstrap/terraform.tfstate"
+shared_delivery_state_key = "environments/shared/delivery/terraform.tfstate"

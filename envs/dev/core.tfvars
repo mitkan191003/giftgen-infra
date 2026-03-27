@@ -2,25 +2,39 @@ region      = "us-east-1"
 project     = "giftgen"
 environment = "dev"
 
+cluster_version             = "1.33"
+cluster_public_access_cidrs = ["0.0.0.0/0"]
+
 vpc_cidr        = "10.20.0.0/16"
 azs             = ["us-east-1a", "us-east-1b", "us-east-1c"]
 public_subnets  = ["10.20.0.0/20", "10.20.16.0/20", "10.20.32.0/20"]
 private_subnets = ["10.20.128.0/20", "10.20.144.0/20", "10.20.160.0/20"]
+
 node_instance_types = ["t4g.small"]
 node_ami_type       = "AL2023_ARM_64_STANDARD"
 node_desired_size   = 3
 node_min_size       = 3
 node_max_size       = 6
 
-cloudflare_zone_id    = "your-cloudflare-zone-id"
+db_name                  = "giftgen"
+db_username              = "giftgen"
+db_instance_class        = "db.t3.micro"
+db_allocated_storage     = 10
+db_max_allocated_storage = 10
+db_multi_az              = false
+backup_retention_period  = 0
+deletion_protection      = false
+
+cloudflare_zone_id    = "42d2a162cb41b523b36daa21f60029a3"
 frontend_hostname     = "dev.giftgen.mithrak.com"
-frontend_cname_target = "cname.vercel-dns.com"
+frontend_cname_target = "a3f15c3e4dcb2fb9.vercel-dns-017.com."
 api_hostname          = "api-dev.giftgen.mithrak.com"
 argocd_hostname       = "argocd-dev.giftgen.mithrak.com"
 cognito_domain_prefix = "giftgen-dev-auth-mithrak"
 
 cognito_callback_urls = [
-  "https://dev.giftgen.mithrak.com/auth/callback"
+  "https://dev.giftgen.mithrak.com/auth/callback",
+  "http://localhost:3000/auth/callback"
 ]
 
 cognito_logout_urls = [
@@ -32,10 +46,3 @@ cognito_password_require_lowercase = false
 cognito_password_require_uppercase = false
 cognito_password_require_numbers   = true
 cognito_password_require_symbols   = false
-
-enable_backend_delivery     = true
-backend_repository_full_name = "mitkan191003/giftgen-backend"
-backend_repository_branch    = "main"
-backend_connection_name      = "giftgen-dev-backend"
-enable_argocd_refresh        = true
-argocd_application_name      = "giftgen"

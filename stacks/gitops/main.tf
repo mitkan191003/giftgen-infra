@@ -2,11 +2,17 @@ provider "aws" {
   region = var.region
 }
 
+locals {
+  core_state_key            = var.core_state_key != "" ? var.core_state_key : "environments/${var.environment}/terraform.tfstate"
+  bootstrap_state_key       = var.bootstrap_state_key != "" ? var.bootstrap_state_key : "environments/${var.environment}/bootstrap/terraform.tfstate"
+  shared_delivery_state_key = var.shared_delivery_state_key != "" ? var.shared_delivery_state_key : "environments/shared/delivery/terraform.tfstate"
+}
+
 data "terraform_remote_state" "core" {
   backend = "s3"
   config = {
     bucket  = var.state_bucket_name
-    key     = var.core_state_key
+    key     = local.core_state_key
     region  = var.region
     encrypt = true
   }
@@ -16,7 +22,17 @@ data "terraform_remote_state" "bootstrap" {
   backend = "s3"
   config = {
     bucket  = var.state_bucket_name
-    key     = var.bootstrap_state_key
+    key     = local.bootstrap_state_key
+    region  = var.region
+    encrypt = true
+  }
+}
+
+data "terraform_remote_state" "shared_delivery" {
+  backend = "s3"
+  config = {
+    bucket  = var.state_bucket_name
+    key     = local.shared_delivery_state_key
     region  = var.region
     encrypt = true
   }
@@ -37,7 +53,7 @@ provider "kubernetes" {
 }
 
 module "cluster_gitops" {
-  source = "../../../modules/cluster_gitops"
+  source = "../../modules/cluster_gitops"
 
   project     = var.project
   environment = var.environment
@@ -50,8 +66,8 @@ module "cluster_gitops" {
   application_service_account_role_arn = data.terraform_remote_state.bootstrap.outputs.application_service_account_role_arn
 
   assets_bucket_name            = data.terraform_remote_state.core.outputs.assets_bucket_name
-  backend_api_repository_url    = data.terraform_remote_state.core.outputs.backend_api_repository_url
-  backend_worker_repository_url = data.terraform_remote_state.core.outputs.backend_worker_repository_url
+  backend_api_repository_url    = data.terraform_remote_state.shared_delivery.outputs.backend_api_repository_url
+  backend_worker_repository_url = data.terraform_remote_state.shared_delivery.outputs.backend_worker_repository_url
   database_name                 = data.terraform_remote_state.core.outputs.database_name
   database_endpoint             = data.terraform_remote_state.core.outputs.database_endpoint
   database_secret_arn           = data.terraform_remote_state.core.outputs.database_secret_arn

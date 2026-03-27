@@ -2,132 +2,150 @@
 
 ## Core Decisions
 
-### Environment Separation
+### Two Real Environments
 
-Treat dev, staging, and prod as real environments with stable hostnames instead of relying on raw Vercel preview URLs.
+The platform now assumes only two long-lived environments:
 
-Recommended hostname layout:
+- `dev`
+- `prod`
 
-- Prod frontend: `giftgen.mithrak.com`
-- Dev frontend: `dev.giftgen.mithrak.com`
-- Staging frontend: `staging.giftgen.mithrak.com`
-- Prod API: `api.giftgen.mithrak.com`
-- Dev API: `api-dev.giftgen.mithrak.com`
-- Staging API: `api-staging.giftgen.mithrak.com`
-- Prod ArgoCD: `argocd.giftgen.mithrak.com`
-- Dev ArgoCD: `argocd-dev.giftgen.mithrak.com`
-- Staging ArgoCD: `argocd-staging.giftgen.mithrak.com`
+There is no staging stack. PR review belongs in Vercel preview deployments, not in a separately managed Terraform environment.
 
-Vercel preview deployments still matter for PR review, but they are not the source of truth for deployed environments because Cognito callback URLs need to be exact and stable.
+Stable hostnames:
 
-Do not hang AWS-managed endpoints off a frontend hostname that is itself a Vercel `CNAME`. A name like `argocd.dev.giftgen.mithrak.com` inherits the `dev.giftgen.mithrak.com` branch, which is delegated to Vercel. Use sibling labels like `argocd-dev.giftgen.mithrak.com` and `api-dev.giftgen.mithrak.com` instead.
+- dev frontend: `dev.giftgen.mithrak.com`
+- dev API: `api-dev.giftgen.mithrak.com`
+- dev ArgoCD: `argocd-dev.giftgen.mithrak.com`
+- prod frontend: `giftgen.mithrak.com`
+- prod API: `api.giftgen.mithrak.com`
+- prod ArgoCD: `argocd.giftgen.mithrak.com`
 
-If a single Vercel project cannot provide enough stable non-production environments on the chosen plan, use multiple Vercel projects. The infrastructure requirement is stable hostnames per environment, not a single Vercel project.
+Do not place AWS-managed hosts under a frontend hostname that is itself a Vercel `CNAME`. Use sibling names such as `api-dev...` and `argocd-dev...`.
+
+### Shared Build, Separate Runtime
+
+Backend image build and publish are now modeled as a shared concern:
+
+- shared ECR repositories
+- CodeConnections
+- CodePipeline
+- CodeBuild image builds
+- a reusable ArgoCD deploy CodeBuild project
+
+Runtime remains environment-specific:
+
+- `core`
+- `bootstrap`
+- `gitops`
+
+This separates “build once” from “deploy many”.
+
+### Terraform Layout
+
+Terraform now uses shared stack code plus per-environment config:
+
+```text
+infra/
+  stacks/
+    shared-delivery/
+    core/
+    bootstrap/
+    gitops/
+  envs/
+    shared/
+    dev/
+    prod/
+```
+
+This is more maintainable than copying `dev` folders into `prod`.
+
+Promotion works like this:
+
+1. change Terraform code once
+2. apply to `dev`
+3. validate
+4. apply the same code to `prod`
+
+If a change should remain `dev`-only for a while, gate it with environment-specific variables instead of cloning the Terraform root.
 
 ### Authentication
 
-Use Amazon Cognito User Pools with the authorization code flow and PKCE. Each deployed environment should have its own Cognito configuration and stable frontend origin.
+Use one Cognito user pool per deployed environment.
+
+- dev auth is real Cognito auth, not a special local-only mode
+- prod has its own isolated Cognito configuration
+- Vercel preview URLs are not used as deployed auth callback URLs
 
 ### Public DNS And TLS
 
-Use Cloudflare as the authoritative public DNS provider and manage the required records through Terraform.
+Cloudflare is the authoritative public DNS provider.
 
-- Frontend hostnames are Cloudflare `CNAME` records that point at Vercel.
-- API certificates are ACM certificates validated through Cloudflare-managed DNS validation records.
-- Route 53 is no longer part of the public DNS path.
+- frontend hostnames are Cloudflare `CNAME`s to Vercel
+- ACM certificates are validated through Cloudflare DNS records
+- ExternalDNS keeps dynamic ALB hostnames mapped to Cloudflare API records
 
-This keeps DNS and certificates aligned with the user’s actual DNS provider instead of splitting authority between Cloudflare and Route 53.
-
-For Kubernetes-created AWS load balancers, the practical DNS automation path is ExternalDNS with the Cloudflare provider. Terraform creates the zone-level prerequisites and secret containers; in-cluster controllers keep dynamic ALB hostnames mapped to stable Cloudflare records.
+Route 53 is not part of the public DNS path.
 
 ### Scheduled Cleanup
 
-Scheduled cleanup should run as an in-cluster Kubernetes `CronJob` managed by ArgoCD as part of the backend release.
+Cleanup runs as an ArgoCD-managed Kubernetes `CronJob` in the backend Helm release.
 
-This is a better fit than `EventBridge Scheduler -> Lambda -> Kubernetes Job` because:
+That keeps cleanup in the same image, deployment, and observability path as the rest of the app.
 
-- cleanup stays in the same deployment and image management flow as the rest of the workloads
-- image updates can follow normal GitOps instead of Terraform variables
-- there is no separate Lambda IAM and EKS RBAC bridge to bootstrap
+### Delivery And Promotion
 
-### Backend Delivery
+The current delivery model is:
 
-Use AWS CodeConnections + CodePipeline + CodeBuild for backend image publishing.
+- one shared-delivery stack owns shared ECR and branch-specific pipelines
+- the `dev` pipeline watches the `dev` branch and deploys dev ArgoCD
+- the `prod` pipeline watches the `main` branch and deploys prod ArgoCD
+- both images are tagged with the source commit SHA
+- the deploy CodeBuild project is still reusable for manual resyncs or emergency redeploys
 
-The intended release flow is:
+This keeps backend promotion aligned with a PR-based branch flow.
 
-- CodePipeline watches the private backend repo branch
-- the source action exposes the Git commit SHA
-- CodeBuild builds the API and worker images and tags them with that same commit SHA
-- optionally, a second CodeBuild stage authenticates to ArgoCD, sets the `Application` revision and Helm image-tag overrides to that same commit SHA, and waits for the sync to finish
+### Runtime GitOps
 
-This keeps image publishing in AWS and avoids manual version bump commits for the dev release path.
+ArgoCD manages the runtime workloads:
 
-Automatic Git write-back is still possible later, but it is not part of the current design because the current delivery path no longer needs version bump commits to release dev.
+- API deployment
+- worker deployment
+- cleanup `CronJob`
+- migration `Job`
+- ALB ingress
 
-### TLS And Ingress
-
-Provision ACM certificates in Terraform for the backend API. Avoid cert-manager for the first production pass so there is no separate in-cluster certificate IAM story to bootstrap manually.
+The GitOps Terraform root handles the CRD-backed resources that should not be mixed into the initial cluster bootstrap apply.
 
 ### Observability
 
-Use an AWS-first observability baseline:
+The baseline remains AWS-first:
 
-- Amazon CloudWatch Observability EKS add-on for cluster logs and baseline EKS telemetry
-- CloudWatch Logs for centralized application and cluster logs
-- CloudWatch Embedded Metric Format for application metrics emitted by the API, worker, and cleanup job
-- CloudWatch dashboard and alarms for service, RDS, and S3 views
-- CloudWatch Synthetics canary for the public API hostname
-- ALB access logs written to S3
-- Sentry for frontend and backend exception visibility
-
-This keeps the first production pass manageable and directly aligned with the spec. Prometheus and Grafana can still be layered on later if stronger Kubernetes-native querying becomes necessary.
-
-## What Is Included In This Scaffold
-
-- bootstrap state bucket
-- runtime VPC, EKS, RDS, S3, SQS, ECR, Cognito
-- optional CodeConnections, CodePipeline, CodeBuild, and ECR lifecycle policy resources for backend image delivery
-- optional ArgoCD refresh stage inside the backend delivery pipeline
 - CloudWatch Observability EKS add-on
-- CloudWatch dashboard, alarms, SNS topic, and API uptime canary
-- ALB access-log bucket
-- Cloudflare frontend DNS record management
-- ACM certificate request and Cloudflare DNS validation wiring for the API and ArgoCD hostnames
-- ArgoCD install and namespace bootstrap
-- backend runtime IRSA for Secrets Manager and S3 access
-- AWS Load Balancer Controller
-- External Secrets
-- ExternalDNS with Cloudflare
-- a separate GitOps Terraform phase for `ClusterSecretStore`, `ExternalSecret`, ArgoCD `AppProject`, and ArgoCD `Application`
+- centralized container logs in CloudWatch Logs
+- ALB access logs to S3
+- CloudWatch dashboard and alarms
+- CloudWatch Synthetics canary for the public API
+- Sentry for frontend and backend exceptions
 
-Current default cost and compatibility posture:
+## What Is Included In The Current Scaffold
 
-- The default EKS node group is `t4g.small` on ARM64 Amazon Linux 2023 to fit lower-cost development accounts.
-- The dev environment overrides that generic default to `3 x t4g.small` because the current controller set plus the CloudWatch Observability add-on does not fit on two 11-pod nodes.
-- The default RDS backup retention period is `0` so database creation succeeds on constrained AWS account plans.
-- Existing Cloudflare frontend and ACM validation records still need to be absent or imported into Terraform if they were created outside Terraform.
+- state bucket bootstrap
+- shared backend delivery stack
+- runtime VPC, EKS, RDS, S3, SQS, Cognito
+- Cloudflare DNS and ACM validation
+- ArgoCD, AWS Load Balancer Controller, ExternalDNS, External Secrets
+- CloudWatch observability baseline
+- GitOps application bootstrap
 
-## What Still Needs A Follow-Up Infra Pass
+## Current Practical Defaults
 
-- non-GitHub private repo credential options if GitHub App auth is not the chosen model
-- Prometheus and Grafana if CloudWatch dashboards and Logs Insights stop being sufficient
-- richer distributed tracing across frontend, API, worker, and external providers
-- staging and prod environments
+- dev defaults to `3 x t4g.small` nodes because the controller footprint plus CloudWatch add-on does not fit on two nodes
+- prod example config uses stronger RDS settings: backups, Multi-AZ, and deletion protection
+- shared delivery keeps the newest `3` images per repo by default
 
-## Reference Docs
+## What Still Needs Iteration Later
 
-- Terraform S3 backend: https://developer.hashicorp.com/terraform/language/backend/s3
-- Cloudflare provider customization: https://developers.cloudflare.com/terraform/advanced-topics/provider-customization/
-- Cloudflare DNS Terraform resource: https://developers.cloudflare.com/api/terraform/resources/dns/subresources/records/
-- ACM DNS validation: https://docs.aws.amazon.com/acm/latest/userguide/dns-validation.html
-- Cognito PKCE: https://docs.aws.amazon.com/cognito/latest/developerguide/using-pkce-in-authorization-code.html
-- Cognito app client callback URL requirements: https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html
-- Vercel custom environments: https://vercel.com/docs/custom-environments
-- Vercel access control: https://vercel.com/docs/security/access-control
-- Kubernetes CronJob: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/
-- Argo CD automated sync: https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/
-- CloudWatch Observability EKS add-on: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-EKS-addon.html
-- CloudWatch Application Signals for EKS: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch-Application-Signals-Enable-EKS.html
-- ALB access logs: https://docs.aws.amazon.com/elasticloadbalancing/latest/application/enable-access-logging.html
-- CloudWatch Synthetics: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Synthetics_Canaries.html
+- making prod ArgoCD private instead of publicly reachable
+- stronger Terraform apply automation and policy gates
+- optional Git write-back for GitOps releases if you want fully Git-pinned env state instead of Argo runtime overrides
+- richer tracing across frontend, API, worker, Modal, and OpenAI

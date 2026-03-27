@@ -2,11 +2,15 @@ provider "aws" {
   region = var.region
 }
 
+locals {
+  core_state_key = var.core_state_key != "" ? var.core_state_key : "environments/${var.environment}/terraform.tfstate"
+}
+
 data "terraform_remote_state" "core" {
   backend = "s3"
   config = {
     bucket  = var.state_bucket_name
-    key     = var.core_state_key
+    key     = local.core_state_key
     region  = var.region
     encrypt = true
   }
@@ -35,7 +39,7 @@ provider "helm" {
 }
 
 module "cluster_bootstrap" {
-  source = "../../../modules/cluster_bootstrap"
+  source = "../../modules/cluster_bootstrap"
 
   project      = var.project
   environment  = var.environment
@@ -45,25 +49,23 @@ module "cluster_bootstrap" {
   cluster_oidc_issuer_url = data.aws_eks_cluster.this.identity[0].oidc[0].issuer
   oidc_provider_arn       = data.terraform_remote_state.core.outputs.oidc_provider_arn
 
-  vpc_id                        = data.terraform_remote_state.core.outputs.vpc_id
-  assets_bucket_name            = data.terraform_remote_state.core.outputs.assets_bucket_name
-  backend_api_repository_url    = data.terraform_remote_state.core.outputs.backend_api_repository_url
-  backend_worker_repository_url = data.terraform_remote_state.core.outputs.backend_worker_repository_url
-  database_name                 = data.terraform_remote_state.core.outputs.database_name
-  database_secret_arn           = data.terraform_remote_state.core.outputs.database_secret_arn
-  modal_secret_arn              = data.terraform_remote_state.core.outputs.modal_secret_arn
-  openai_secret_arn             = data.terraform_remote_state.core.outputs.openai_secret_arn
-  cloudflare_secret_arn         = data.terraform_remote_state.core.outputs.cloudflare_secret_arn
-  argocd_github_app_secret_arn  = data.terraform_remote_state.core.outputs.argocd_github_app_secret_arn
-  cognito_user_pool_id          = data.terraform_remote_state.core.outputs.cognito_user_pool_id
-  cognito_user_pool_client_id   = data.terraform_remote_state.core.outputs.cognito_user_pool_client_id
-  cognito_domain                = data.terraform_remote_state.core.outputs.cognito_domain
-  cloudflare_zone_id            = data.terraform_remote_state.core.outputs.cloudflare_zone_id
-  frontend_hostname             = coalesce(try(data.terraform_remote_state.core.outputs.frontend_hostname, null), "")
-  api_hostname                  = coalesce(try(data.terraform_remote_state.core.outputs.api_hostname, null), "")
-  api_certificate_arn           = coalesce(try(data.terraform_remote_state.core.outputs.api_certificate_arn, null), "")
-  argocd_hostname               = coalesce(try(data.terraform_remote_state.core.outputs.argocd_hostname, null), "")
-  argocd_certificate_arn        = coalesce(try(data.terraform_remote_state.core.outputs.argocd_certificate_arn, null), "")
+  vpc_id                       = data.terraform_remote_state.core.outputs.vpc_id
+  assets_bucket_name           = data.terraform_remote_state.core.outputs.assets_bucket_name
+  database_name                = data.terraform_remote_state.core.outputs.database_name
+  database_secret_arn          = data.terraform_remote_state.core.outputs.database_secret_arn
+  modal_secret_arn             = data.terraform_remote_state.core.outputs.modal_secret_arn
+  openai_secret_arn            = data.terraform_remote_state.core.outputs.openai_secret_arn
+  cloudflare_secret_arn        = data.terraform_remote_state.core.outputs.cloudflare_secret_arn
+  argocd_github_app_secret_arn = data.terraform_remote_state.core.outputs.argocd_github_app_secret_arn
+  cognito_user_pool_id         = data.terraform_remote_state.core.outputs.cognito_user_pool_id
+  cognito_user_pool_client_id  = data.terraform_remote_state.core.outputs.cognito_user_pool_client_id
+  cognito_domain               = data.terraform_remote_state.core.outputs.cognito_domain
+  cloudflare_zone_id           = data.terraform_remote_state.core.outputs.cloudflare_zone_id
+  frontend_hostname            = coalesce(try(data.terraform_remote_state.core.outputs.frontend_hostname, null), "")
+  api_hostname                 = coalesce(try(data.terraform_remote_state.core.outputs.api_hostname, null), "")
+  api_certificate_arn          = coalesce(try(data.terraform_remote_state.core.outputs.api_certificate_arn, null), "")
+  argocd_hostname              = coalesce(try(data.terraform_remote_state.core.outputs.argocd_hostname, null), "")
+  argocd_certificate_arn       = coalesce(try(data.terraform_remote_state.core.outputs.argocd_certificate_arn, null), "")
 
   application_repo_url        = var.application_repo_url
   application_target_revision = var.application_target_revision
@@ -73,7 +75,7 @@ module "cluster_bootstrap" {
 }
 
 module "observability" {
-  source = "../../../modules/observability"
+  source = "../../modules/observability"
 
   project                      = var.project
   environment                  = var.environment

@@ -1,7 +1,7 @@
 locals {
   name                     = "${var.project}-${var.environment}"
   oidc_hostpath            = trimprefix(var.cluster_oidc_issuer_url, "https://")
-  runtime_environment_name = lookup({ dev = "development", staging = "staging", prod = "production" }, var.environment, var.environment)
+  runtime_environment_name = lookup({ dev = "development", prod = "production" }, var.environment, var.environment)
   create_api_canary        = var.enable_api_canary && var.api_hostname != ""
   alb_access_logs_prefix   = "${var.project}/${var.environment}/api"
   application_log_groups = {

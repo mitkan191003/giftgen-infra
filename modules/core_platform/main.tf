@@ -47,6 +47,8 @@ module "eks" {
   cluster_endpoint_public_access       = true
   cluster_endpoint_public_access_cidrs = var.cluster_public_access_cidrs
 
+  cluster_enabled_log_types = []
+
   enable_irsa                              = true
   enable_cluster_creator_admin_permissions = true
 
@@ -174,24 +176,6 @@ resource "aws_sqs_queue" "generation" {
     deadLetterTargetArn = aws_sqs_queue.generation_dlq.arn
     maxReceiveCount     = 5
   })
-}
-
-resource "aws_ecr_repository" "backend_api" {
-  name                 = "${local.name}/backend-api"
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-resource "aws_ecr_repository" "backend_worker" {
-  name                 = "${local.name}/backend-worker"
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
 }
 
 resource "aws_cognito_user_pool" "this" {

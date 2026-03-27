@@ -1,18 +1,21 @@
+variable "region" {
+  type    = string
+  default = "us-east-1"
+}
+
 variable "project" {
-  type = string
+  type    = string
+  default = "giftgen"
 }
 
 variable "environment" {
-  type = string
+  type    = string
+  default = "shared"
 }
 
 variable "name_prefix" {
   type    = string
   default = ""
-}
-
-variable "region" {
-  type = string
 }
 
 variable "repository_namespace" {
@@ -54,14 +57,6 @@ variable "codebuild_image" {
   default = "aws/codebuild/amazonlinux-aarch64-standard:3.0"
 }
 
-variable "codebuild_buildspec" {
-  type = string
-}
-
-variable "argocd_deploy_buildspec" {
-  type = string
-}
-
 variable "log_retention_days" {
   type    = number
   default = 14
@@ -75,4 +70,18 @@ variable "pipelines" {
     argocd_application_name   = optional(string, "giftgen")
     argocd_deploy_secret_name = optional(string, "")
   }))
+  default = {
+    dev = {
+      branch                    = "dev"
+      argocd_server             = "https://argocd-dev.giftgen.mithrak.com"
+      argocd_application_name   = "giftgen"
+      argocd_deploy_secret_name = "giftgen-dev/argocd-deploy"
+    }
+    prod = {
+      branch                    = "main"
+      argocd_server             = "https://argocd.giftgen.mithrak.com"
+      argocd_application_name   = "giftgen"
+      argocd_deploy_secret_name = "giftgen-prod/argocd-deploy"
+    }
+  }
 }

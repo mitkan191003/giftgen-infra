@@ -42,30 +42,6 @@ output "generation_queue_arn" {
   value = aws_sqs_queue.generation.arn
 }
 
-output "backend_api_repository_url" {
-  value = aws_ecr_repository.backend_api.repository_url
-}
-
-output "backend_api_repository_name" {
-  value = aws_ecr_repository.backend_api.name
-}
-
-output "backend_api_repository_arn" {
-  value = aws_ecr_repository.backend_api.arn
-}
-
-output "backend_worker_repository_url" {
-  value = aws_ecr_repository.backend_worker.repository_url
-}
-
-output "backend_worker_repository_name" {
-  value = aws_ecr_repository.backend_worker.name
-}
-
-output "backend_worker_repository_arn" {
-  value = aws_ecr_repository.backend_worker.arn
-}
-
 output "modal_secret_arn" {
   value = aws_secretsmanager_secret.modal.arn
 }

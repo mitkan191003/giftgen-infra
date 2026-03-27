@@ -13,6 +13,11 @@ variable "environment" {
   default = "dev"
 }
 
+variable "cluster_version" {
+  type    = string
+  default = "1.33"
+}
+
 variable "vpc_cidr" {
   type = string
 }
@@ -27,6 +32,11 @@ variable "public_subnets" {
 
 variable "private_subnets" {
   type = list(string)
+}
+
+variable "cluster_public_access_cidrs" {
+  type    = list(string)
+  default = ["0.0.0.0/0"]
 }
 
 variable "cloudflare_zone_id" {
@@ -91,41 +101,6 @@ variable "cognito_password_require_symbols" {
   default = false
 }
 
-variable "enable_backend_delivery" {
-  type    = bool
-  default = false
-}
-
-variable "backend_repository_full_name" {
-  type    = string
-  default = ""
-}
-
-variable "backend_repository_branch" {
-  type    = string
-  default = "main"
-}
-
-variable "backend_connection_arn" {
-  type    = string
-  default = ""
-}
-
-variable "backend_connection_name" {
-  type    = string
-  default = ""
-}
-
-variable "enable_argocd_refresh" {
-  type    = bool
-  default = false
-}
-
-variable "argocd_application_name" {
-  type    = string
-  default = "giftgen"
-}
-
 variable "node_instance_types" {
   type    = list(string)
   default = ["t4g.small"]
@@ -149,4 +124,44 @@ variable "node_min_size" {
 variable "node_max_size" {
   type    = number
   default = 6
+}
+
+variable "db_name" {
+  type    = string
+  default = "giftgen"
+}
+
+variable "db_username" {
+  type    = string
+  default = "giftgen"
+}
+
+variable "db_instance_class" {
+  type    = string
+  default = "db.t3.micro"
+}
+
+variable "db_allocated_storage" {
+  type    = number
+  default = 10
+}
+
+variable "db_max_allocated_storage" {
+  type    = number
+  default = 20
+}
+
+variable "db_multi_az" {
+  type    = bool
+  default = false
+}
+
+variable "backup_retention_period" {
+  type    = number
+  default = 0
+}
+
+variable "deletion_protection" {
+  type    = bool
+  default = false
 }

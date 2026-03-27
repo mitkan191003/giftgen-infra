@@ -19,11 +19,15 @@ variable "state_bucket_name" {
 
 variable "core_state_key" {
   type    = string
-  default = "environments/dev/terraform.tfstate"
+  default = ""
 }
 
 variable "bootstrap_state_key" {
   type    = string
-  default = "environments/dev/bootstrap/terraform.tfstate"
+  default = ""
 }
 
+variable "shared_delivery_state_key" {
+  type    = string
+  default = ""
+}

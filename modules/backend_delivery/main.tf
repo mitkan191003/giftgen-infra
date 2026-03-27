@@ -1,15 +1,31 @@
 locals {
-  name                             = "${var.project}-${var.environment}"
-  github_connection_arn            = var.github_connection_arn != "" ? var.github_connection_arn : aws_codestarconnections_connection.github[0].arn
-  argocd_deploy_secret_name        = var.argocd_deploy_secret_name != "" ? var.argocd_deploy_secret_name : "${local.name}/argocd-deploy"
-  argocd_deploy_secret_arn_pattern = "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${local.argocd_deploy_secret_name}*"
-  argocd_refresh_enabled           = var.enable_argocd_refresh && var.argocd_server != ""
+  name_prefix           = var.name_prefix != "" ? var.name_prefix : "${var.project}-${var.environment}"
+  repository_namespace  = trimsuffix(trimprefix(var.repository_namespace != "" ? var.repository_namespace : var.project, "/"), "/")
+  github_connection_arn = var.github_connection_arn != "" ? var.github_connection_arn : aws_codestarconnections_connection.github[0].arn
+  pipelines = {
+    for name, pipeline in var.pipelines : name => {
+      branch                = pipeline.branch
+      enable_argocd_refresh = try(pipeline.enable_argocd_refresh, true) && try(pipeline.argocd_server, "") != ""
+      argocd_server         = try(pipeline.argocd_server, "")
+      argocd_application_name = try(
+        pipeline.argocd_application_name,
+        "giftgen",
+      )
+      argocd_deploy_secret_name = try(pipeline.argocd_deploy_secret_name, "") != "" ? pipeline.argocd_deploy_secret_name : "${local.name_prefix}-${name}/argocd-deploy"
+    }
+  }
+  argocd_deploy_secret_arn_patterns = [
+    for pipeline in values(local.pipelines) :
+    "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:${pipeline.argocd_deploy_secret_name}*"
+    if pipeline.enable_argocd_refresh
+  ]
+  any_argocd_refresh_enabled = length(local.argocd_deploy_secret_arn_patterns) > 0
 }
 
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "artifacts" {
-  bucket = "${local.name}-backend-pipeline-${data.aws_caller_identity.current.account_id}-${var.region}"
+  bucket = "${local.name_prefix}-backend-pipeline-${data.aws_caller_identity.current.account_id}-${var.region}"
 }
 
 resource "aws_s3_bucket_versioning" "artifacts" {
@@ -41,12 +57,30 @@ resource "aws_s3_bucket_public_access_block" "artifacts" {
 resource "aws_codestarconnections_connection" "github" {
   count = var.github_connection_arn == "" ? 1 : 0
 
-  name          = var.github_connection_name != "" ? var.github_connection_name : "${local.name}-github"
+  name          = var.github_connection_name != "" ? var.github_connection_name : "${local.name_prefix}-github"
   provider_type = "GitHub"
 }
 
+resource "aws_ecr_repository" "backend_api" {
+  name                 = "${local.repository_namespace}/backend-api"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_repository" "backend_worker" {
+  name                 = "${local.repository_namespace}/backend-worker"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
 resource "aws_ecr_lifecycle_policy" "backend_api" {
-  repository = var.backend_api_repository_name
+  repository = aws_ecr_repository.backend_api.name
   policy = jsonencode({
     rules = [
       {
@@ -66,7 +100,7 @@ resource "aws_ecr_lifecycle_policy" "backend_api" {
 }
 
 resource "aws_ecr_lifecycle_policy" "backend_worker" {
-  repository = var.backend_worker_repository_name
+  repository = aws_ecr_repository.backend_worker.name
   policy = jsonencode({
     rules = [
       {
@@ -97,7 +131,7 @@ data "aws_iam_policy_document" "codebuild_assume_role" {
 }
 
 resource "aws_iam_role" "codebuild" {
-  name               = "${local.name}-backend-images-codebuild"
+  name               = "${local.name_prefix}-backend-images-codebuild"
   assume_role_policy = data.aws_iam_policy_document.codebuild_assume_role.json
 }
 
@@ -146,26 +180,26 @@ data "aws_iam_policy_document" "codebuild" {
       "ecr:UploadLayerPart",
     ]
     resources = [
-      var.backend_api_repository_arn,
-      var.backend_worker_repository_arn,
+      aws_ecr_repository.backend_api.arn,
+      aws_ecr_repository.backend_worker.arn,
     ]
   }
 
   dynamic "statement" {
-    for_each = local.argocd_refresh_enabled ? [1] : []
+    for_each = local.any_argocd_refresh_enabled ? [1] : []
 
     content {
       sid = "ReadArgoCdDeploySecret"
       actions = [
         "secretsmanager:GetSecretValue",
       ]
-      resources = [local.argocd_deploy_secret_arn_pattern]
+      resources = local.argocd_deploy_secret_arn_patterns
     }
   }
 }
 
 resource "aws_iam_policy" "codebuild" {
-  name   = "${local.name}-backend-images-codebuild"
+  name   = "${local.name_prefix}-backend-images-codebuild"
   policy = data.aws_iam_policy_document.codebuild.json
 }
 
@@ -175,19 +209,19 @@ resource "aws_iam_role_policy_attachment" "codebuild" {
 }
 
 resource "aws_cloudwatch_log_group" "codebuild" {
-  name              = "/aws/codebuild/${local.name}-backend-images"
+  name              = "/aws/codebuild/${local.name_prefix}-backend-images"
   retention_in_days = var.log_retention_days
 }
 
 resource "aws_cloudwatch_log_group" "argocd_refresh" {
-  count = local.argocd_refresh_enabled ? 1 : 0
+  count = local.any_argocd_refresh_enabled ? 1 : 0
 
-  name              = "/aws/codebuild/${local.name}-argocd-refresh"
+  name              = "/aws/codebuild/${local.name_prefix}-argocd-refresh"
   retention_in_days = var.log_retention_days
 }
 
 resource "aws_codebuild_project" "backend_images" {
-  name         = "${local.name}-backend-images"
+  name         = "${local.name_prefix}-backend-images"
   service_role = aws_iam_role.codebuild.arn
 
   artifacts {
@@ -208,12 +242,12 @@ resource "aws_codebuild_project" "backend_images" {
 
     environment_variable {
       name  = "API_REPO_URI"
-      value = var.backend_api_repository_url
+      value = aws_ecr_repository.backend_api.repository_url
     }
 
     environment_variable {
       name  = "WORKER_REPO_URI"
-      value = var.backend_worker_repository_url
+      value = aws_ecr_repository.backend_worker.repository_url
     }
   }
 
@@ -233,8 +267,8 @@ resource "aws_codebuild_project" "backend_images" {
 }
 
 resource "aws_codebuild_project" "argocd_refresh" {
-  count        = local.argocd_refresh_enabled ? 1 : 0
-  name         = "${local.name}-argocd-refresh"
+  count        = local.any_argocd_refresh_enabled ? 1 : 0
+  name         = "${local.name_prefix}-argocd-refresh"
   service_role = aws_iam_role.codebuild.arn
 
   artifacts {
@@ -250,18 +284,18 @@ resource "aws_codebuild_project" "argocd_refresh" {
 
     environment_variable {
       name  = "ARGOCD_SERVER"
-      value = var.argocd_server
+      value = "https://argocd.invalid"
     }
 
     environment_variable {
       name  = "ARGOCD_APPLICATION"
-      value = var.argocd_application_name
+      value = "giftgen"
     }
 
     environment_variable {
       name  = "ARGOCD_DEPLOY_SECRET"
       type  = "SECRETS_MANAGER"
-      value = local.argocd_deploy_secret_name
+      value = "giftgen/argocd-deploy"
     }
   }
 
@@ -278,13 +312,6 @@ resource "aws_codebuild_project" "argocd_refresh" {
   }
 
   depends_on = [aws_iam_role_policy_attachment.codebuild]
-
-  lifecycle {
-    precondition {
-      condition     = local.argocd_refresh_enabled
-      error_message = "Argo CD refresh requires enable_argocd_refresh and argocd_server."
-    }
-  }
 }
 
 data "aws_iam_policy_document" "codepipeline_assume_role" {
@@ -299,7 +326,7 @@ data "aws_iam_policy_document" "codepipeline_assume_role" {
 }
 
 resource "aws_iam_role" "codepipeline" {
-  name               = "${local.name}-backend-images-codepipeline"
+  name               = "${local.name_prefix}-backend-images-codepipeline"
   assume_role_policy = data.aws_iam_policy_document.codepipeline_assume_role.json
 }
 
@@ -336,13 +363,13 @@ data "aws_iam_policy_document" "codepipeline" {
     ]
     resources = compact([
       aws_codebuild_project.backend_images.arn,
-      local.argocd_refresh_enabled ? aws_codebuild_project.argocd_refresh[0].arn : null,
+      local.any_argocd_refresh_enabled ? aws_codebuild_project.argocd_refresh[0].arn : null,
     ])
   }
 }
 
 resource "aws_iam_policy" "codepipeline" {
-  name   = "${local.name}-backend-images-codepipeline"
+  name   = "${local.name_prefix}-backend-images-codepipeline"
   policy = data.aws_iam_policy_document.codepipeline.json
 }
 
@@ -352,7 +379,9 @@ resource "aws_iam_role_policy_attachment" "codepipeline" {
 }
 
 resource "aws_codepipeline" "backend_images" {
-  name     = "${local.name}-backend-images"
+  for_each = local.pipelines
+
+  name     = "${local.name_prefix}-backend-${each.key}"
   role_arn = aws_iam_role.codepipeline.arn
 
   artifact_store {
@@ -375,7 +404,7 @@ resource "aws_codepipeline" "backend_images" {
       configuration = {
         ConnectionArn    = local.github_connection_arn
         FullRepositoryId = var.github_repository_full_name
-        BranchName       = var.github_repository_branch
+        BranchName       = each.value.branch
         DetectChanges    = "true"
       }
     }
@@ -406,7 +435,7 @@ resource "aws_codepipeline" "backend_images" {
   }
 
   dynamic "stage" {
-    for_each = local.argocd_refresh_enabled ? [1] : []
+    for_each = each.value.enable_argocd_refresh ? [1] : []
 
     content {
       name = "Deploy"
@@ -431,6 +460,21 @@ resource "aws_codepipeline" "backend_images" {
               name  = "SOURCE_COMMIT_ID"
               value = "#{SourceVariables.CommitId}"
               type  = "PLAINTEXT"
+            },
+            {
+              name  = "ARGOCD_SERVER"
+              value = each.value.argocd_server
+              type  = "PLAINTEXT"
+            },
+            {
+              name  = "ARGOCD_APPLICATION"
+              value = each.value.argocd_application_name
+              type  = "PLAINTEXT"
+            },
+            {
+              name  = "ARGOCD_DEPLOY_SECRET"
+              value = each.value.argocd_deploy_secret_name
+              type  = "SECRETS_MANAGER"
             }
           ])
         }
