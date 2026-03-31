@@ -1,76 +1,102 @@
-# GiftGen Infra
+# GiftGen Infrastructure
 
-Terraform for the AWS platform, split into shared delivery and per-environment runtime stacks.
+GiftGen Infrastructure provisions and operates the AWS side of the GiftGen platform.
 
-## Structure
+This repository contains the Terraform code for the shared delivery pipeline and the per-environment runtime stacks that power the frontend and backend applications. It is responsible for the pieces you would expect around a production application platform: networking, Kubernetes, databases, storage, authentication, certificates, DNS, observability, and deployment plumbing.
 
-- `bootstrap/`
-  - one-time S3 remote-state bucket
-- `stacks/shared-delivery/`
-  - shared ECR, CodeConnections, CodePipeline, CodeBuild, and reusable Argo deploy project
-- `stacks/core/`
-  - VPC, EKS, RDS, S3, SQS, Cognito, DNS, ACM, and environment secrets
-- `stacks/bootstrap/`
-  - ArgoCD, AWS Load Balancer Controller, ExternalDNS, External Secrets, IRSA, and observability bootstrap
-- `stacks/gitops/`
-  - CRD-backed GitOps resources and the ArgoCD application definition
-- `envs/shared/`
-  - shared delivery config
-- `envs/dev/`
-  - dev runtime config
-- `envs/prod/`
-  - prod runtime config
-- `modules/`
-  - reusable Terraform modules
+## Related Repositories
+
+- [giftgen-backend](https://github.com/mitkan191003/giftgen-backend): the API, worker, and Helm chart deployed into the cluster
+- [giftgen-frontend](https://github.com/mitkan191003/giftgen-frontend): the Vercel-hosted Next.js application that talks to the backend
+
+## Where This Repo Fits
+
+The GiftGen architecture is split across three repositories:
+
+- the frontend delivers the user experience
+- the backend owns application logic and generation workflows
+- this repository creates and wires together the platform those applications run on
+
+That includes:
+
+- VPC and networking
+- EKS
+- RDS
+- S3
+- Cognito
+- Cloudflare-managed DNS records
+- ACM certificates
+- ArgoCD and supporting controllers
+- CloudWatch-based observability
+- shared image build and deployment infrastructure
+
+## Repository Layout
+
+The Terraform code is intentionally split into reusable stacks instead of duplicated environment folders:
+
+- `stacks/shared-delivery`
+  - shared ECR repositories, CodeConnections, CodePipeline, and CodeBuild
+- `stacks/core`
+  - foundational AWS resources for an environment
+- `stacks/bootstrap`
+  - cluster services such as ArgoCD, ExternalDNS, External Secrets, and observability
+- `stacks/gitops`
+  - GitOps resources that depend on CRDs installed during bootstrap
+- `envs/shared`
+  - configuration for shared delivery
+- `envs/dev`
+  - development environment configuration
+- `envs/prod`
+  - production environment configuration
 - `bin/tf`
-  - wrapper for stack/environment Terraform commands
-  - isolates a separate `TF_DATA_DIR` per environment and stack so `dev` and `prod` do not reuse the same backend selection
+  - a wrapper around Terraform commands for the stack and environment layout used here
 
-## Why The Stacks Are Split
+## Environment Model
 
-The runtime platform is intentionally split into:
+The platform is built around two long-lived environments:
 
-1. `core`
-2. `bootstrap`
-3. `gitops`
+- `dev`
+- `prod`
 
-That keeps EKS provisioning, Helm installs, and CRD-backed manifests out of the same apply, which makes Terraform far more predictable.
+They are intended to be similar in shape, but isolated from one another by state, DNS, secrets, Cognito, and runtime resources.
 
-Shared delivery is separate because image build/publish should not live inside a single environment’s runtime state.
+## Getting Started
 
-## Intended Apply Order
+This repository assumes you already have:
 
-One-time:
+- Terraform installed
+- AWS credentials configured
+- access to the target Cloudflare zone
 
-1. `infra/bootstrap`
+The usual flow is:
 
-Shared:
+1. bootstrap remote state
+2. configure shared delivery
+3. apply the environment stacks in order
 
-2. `infra/stacks/shared-delivery`
-
-Per environment:
-
-3. `infra/stacks/core`
-4. `infra/stacks/bootstrap`
-5. `infra/stacks/gitops`
-
-Use the wrapper:
+The wrapper script keeps the command flow consistent:
 
 ```bash
 ./infra/bin/tf shared-delivery plan
 ./infra/bin/tf dev core plan
-./infra/bin/tf prod bootstrap apply
+./infra/bin/tf dev bootstrap plan
+./infra/bin/tf dev gitops plan
 ```
 
-## Promotion Model
+The same pattern applies to `prod`.
 
-- shared delivery builds backend images once and tags them with the source commit SHA
-- `dev` branch deploys the dev ArgoCD app
-- `main` branch deploys the prod ArgoCD app
-- Terraform code is shared across environments; promotion happens by apply order and environment config, not by copying folders
+## Deployment Model
 
-Read [Promotion.md](/home/mithrak/giftgen/Promotion.md) for the full runtime promotion flow.
+The delivery model is branch-based:
 
-If you are migrating an already-running dev environment from the old layout,
-read [infra/docs/migration-to-stacks.md](/home/mithrak/giftgen/infra/docs/migration-to-stacks.md)
-before your first stack-based apply.
+- the `dev` branch drives the development deployment path
+- the `main` branch drives the production deployment path
+
+Backend images are built in the shared delivery stack and then deployed into the appropriate environment through ArgoCD.
+
+## Documentation
+
+This repository still contains more operational detail than the other two, so the additional docs are worth reading if you plan to work on the platform itself:
+
+- [docs/architecture.md](docs/architecture.md)
+- [docs/migration-to-stacks.md](docs/migration-to-stacks.md)
