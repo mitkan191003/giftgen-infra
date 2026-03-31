@@ -109,20 +109,25 @@ locals {
     }
   }
 
-  application_auto_sync_options = var.application_auto_sync ? tomap({
-    automated = {
-      prune    = true
-      selfHeal = true
-    }
-    retry = {
-      limit = 10
-      backoff = {
-        duration    = "30s"
-        factor      = 2
-        maxDuration = "10m"
+  application_auto_sync_options = jsondecode(
+    var.application_auto_sync ? <<-JSON
+    {
+      "automated": {
+        "prune": true,
+        "selfHeal": true
+      },
+      "retry": {
+        "limit": 10,
+        "backoff": {
+          "duration": "30s",
+          "factor": 2,
+          "maxDuration": "10m"
+        }
       }
     }
-  }) : tomap({})
+    JSON
+    : "{}"
+  )
 
   application_sync_policy = merge(
     {
