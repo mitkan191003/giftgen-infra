@@ -13,14 +13,17 @@ There is no staging stack. PR review belongs in Vercel preview deployments, not 
 
 Stable hostnames:
 
-- dev frontend: `dev.giftgen.mithrak.com`
-- dev API: `api-dev.giftgen.mithrak.com`
-- dev ArgoCD: `argocd-dev.giftgen.mithrak.com`
+- dev frontend: `dev.giftgen-dev.mithrak.com`
+- dev API: `api.giftgen-dev.mithrak.com`
+- dev ArgoCD: `argocd.giftgen-dev.mithrak.com`
 - prod frontend: `giftgen.mithrak.com`
-- prod API: `api.giftgen.mithrak.com`
-- prod ArgoCD: `argocd.giftgen.mithrak.com`
+- prod API: `api-giftgen.mithrak.com`
+- prod ArgoCD: `argocd-giftgen.mithrak.com`
 
-Do not place AWS-managed hosts under a frontend hostname that is itself a Vercel `CNAME`. Use sibling names such as `api-dev...` and `argocd-dev...`.
+Do not place AWS-managed hosts under a frontend hostname that is itself a Vercel `CNAME`.
+
+- `giftgen.mithrak.com` is the prod frontend `CNAME`, so prod API and ArgoCD must be siblings like `api-giftgen...` and `argocd-giftgen...`
+- `dev.giftgen-dev.mithrak.com` is the dev frontend `CNAME`, so dev API and ArgoCD must be siblings like `api.giftgen-dev...` and `argocd.giftgen-dev...`
 
 ### Shared Build, Separate Runtime
 

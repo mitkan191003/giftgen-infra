@@ -17,7 +17,7 @@ node_max_size       = 6
 
 db_name                  = "giftgen"
 db_username              = "giftgen"
-db_instance_class        = "db.t3.small"
+db_instance_class        = "db.t3.micro"
 db_allocated_storage     = 10
 db_max_allocated_storage = 10
 db_multi_az              = true
@@ -27,8 +27,8 @@ deletion_protection      = true
 cloudflare_zone_id    = "42d2a162cb41b523b36daa21f60029a3"
 frontend_hostname     = "giftgen.mithrak.com"
 frontend_cname_target = "a3f15c3e4dcb2fb9.vercel-dns-017.com."
-api_hostname          = "api.giftgen.mithrak.com"
-argocd_hostname       = "argocd.giftgen.mithrak.com"
+api_hostname          = "api-giftgen.mithrak.com"
+argocd_hostname       = "argocd-giftgen.mithrak.com"
 cognito_domain_prefix = "giftgen-prod-auth-mithrak"
 
 cognito_callback_urls = [

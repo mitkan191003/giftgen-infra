@@ -24,6 +24,7 @@ Terraform for the AWS platform, split into shared delivery and per-environment r
   - reusable Terraform modules
 - `bin/tf`
   - wrapper for stack/environment Terraform commands
+  - isolates a separate `TF_DATA_DIR` per environment and stack so `dev` and `prod` do not reuse the same backend selection
 
 ## Why The Stacks Are Split
 

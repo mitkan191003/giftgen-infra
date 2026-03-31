@@ -27,8 +27,8 @@ deletion_protection      = true
 cloudflare_zone_id    = "your-cloudflare-zone-id"
 frontend_hostname     = "giftgen.mithrak.com"
 frontend_cname_target = "cname.vercel-dns.com"
-api_hostname          = "api.giftgen.mithrak.com"
-argocd_hostname       = "argocd.giftgen.mithrak.com"
+api_hostname          = "api-giftgen.mithrak.com"
+argocd_hostname       = "argocd-giftgen.mithrak.com"
 cognito_domain_prefix = "giftgen-prod-auth-mithrak"
 
 cognito_callback_urls = [

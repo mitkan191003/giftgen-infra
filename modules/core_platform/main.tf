@@ -221,12 +221,20 @@ resource "aws_acm_certificate" "api" {
   count             = local.create_api_dns ? 1 : 0
   domain_name       = var.api_hostname
   validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_acm_certificate" "argocd" {
   count             = local.create_argocd_dns ? 1 : 0
   domain_name       = local.argocd_hostname
   validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "cloudflare_dns_record" "frontend" {

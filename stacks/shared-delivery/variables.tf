@@ -73,13 +73,13 @@ variable "pipelines" {
   default = {
     dev = {
       branch                    = "dev"
-      argocd_server             = "https://argocd-dev.giftgen.mithrak.com"
+      argocd_server             = "https://argocd.giftgen-dev.mithrak.com"
       argocd_application_name   = "giftgen"
       argocd_deploy_secret_name = "giftgen-dev/argocd-deploy"
     }
     prod = {
       branch                    = "main"
-      argocd_server             = "https://argocd.giftgen.mithrak.com"
+      argocd_server             = "https://argocd-giftgen.mithrak.com"
       argocd_application_name   = "giftgen"
       argocd_deploy_secret_name = "giftgen-prod/argocd-deploy"
     }

@@ -61,6 +61,9 @@ else
   var_file="${repo_root}/infra/envs/${env}/${stack}.tfvars"
 fi
 
+tf_data_dir="${repo_root}/infra/.terraform-data/${env}/${stack}"
+mkdir -p "${tf_data_dir}"
+
 cmd=(terraform "-chdir=${stack_dir}" "${terraform_subcommand}")
 
 case "${terraform_subcommand}" in
@@ -77,4 +80,4 @@ case "${terraform_subcommand}" in
 esac
 
 cmd+=("$@")
-exec "${cmd[@]}"
+exec env TF_DATA_DIR="${tf_data_dir}" "${cmd[@]}"

@@ -26,19 +26,19 @@ backup_retention_period  = 0
 deletion_protection      = false
 
 cloudflare_zone_id    = "42d2a162cb41b523b36daa21f60029a3"
-frontend_hostname     = "dev.giftgen.mithrak.com"
+frontend_hostname     = "dev.giftgen-dev.mithrak.com"
 frontend_cname_target = "a3f15c3e4dcb2fb9.vercel-dns-017.com."
-api_hostname          = "api-dev.giftgen.mithrak.com"
-argocd_hostname       = "argocd-dev.giftgen.mithrak.com"
+api_hostname          = "api.giftgen-dev.mithrak.com"
+argocd_hostname       = "argocd.giftgen-dev.mithrak.com"
 cognito_domain_prefix = "giftgen-dev-auth-mithrak"
 
 cognito_callback_urls = [
-  "https://dev.giftgen.mithrak.com/auth/callback",
+  "https://dev.giftgen-dev.mithrak.com/auth/callback",
   "http://localhost:3000/auth/callback"
 ]
 
 cognito_logout_urls = [
-  "https://dev.giftgen.mithrak.com"
+  "https://dev.giftgen-dev.mithrak.com"
 ]
 
 cognito_password_minimum_length    = 7
