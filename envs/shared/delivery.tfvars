@@ -11,7 +11,7 @@ github_repository_full_name = "mitkan191003/giftgen-backend"
 github_connection_name      = "giftgen-backend"
 
 ecr_retention_count = 3
-log_retention_days  = 1
+log_retention_days  = 14
 
 pipelines = {
   dev = {

@@ -72,7 +72,7 @@ case "${terraform_subcommand}" in
       cmd+=("-backend-config=${backend_file}")
     fi
     ;;
-  plan|apply|destroy)
+  plan|apply|destroy|import)
     if [[ -f "${var_file}" ]]; then
       cmd+=("-var-file=${var_file}")
     fi

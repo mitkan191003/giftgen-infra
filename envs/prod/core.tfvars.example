@@ -9,7 +9,7 @@ vpc_cidr        = "10.30.0.0/16"
 azs             = ["us-east-1a", "us-east-1b", "us-east-1c"]
 public_subnets  = ["10.30.0.0/20", "10.30.16.0/20", "10.30.32.0/20"]
 private_subnets = ["10.30.128.0/20", "10.30.144.0/20", "10.30.160.0/20"]
-node_instance_types = ["t4g.medium"]
+node_instance_types = ["t4g.small"]
 node_ami_type       = "AL2023_ARM_64_STANDARD"
 node_desired_size   = 3
 node_min_size       = 3
@@ -17,12 +17,12 @@ node_max_size       = 6
 
 db_name                  = "giftgen"
 db_username              = "giftgen"
-db_instance_class        = "db.t3.small"
-db_allocated_storage     = 20
-db_max_allocated_storage = 100
-db_multi_az              = true
-backup_retention_period  = 7
-deletion_protection      = true
+db_instance_class        = "db.t3.micro"
+db_allocated_storage     = 10
+db_max_allocated_storage = 10
+db_multi_az              = false
+backup_retention_period  = 0
+deletion_protection      = false
 
 cloudflare_zone_id    = "your-cloudflare-zone-id"
 frontend_hostname     = "giftgen.mithrak.com"

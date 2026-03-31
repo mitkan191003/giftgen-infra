@@ -94,4 +94,6 @@ module "observability" {
   enable_api_canary               = var.enable_api_canary
   api_canary_schedule_expression  = var.api_canary_schedule_expression
   notification_email              = var.alert_email
+
+  depends_on = [module.cluster_bootstrap]
 }

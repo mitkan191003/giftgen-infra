@@ -20,9 +20,9 @@ db_username              = "giftgen"
 db_instance_class        = "db.t3.micro"
 db_allocated_storage     = 10
 db_max_allocated_storage = 10
-db_multi_az              = true
+db_multi_az              = false
 backup_retention_period  = 0
-deletion_protection      = true
+deletion_protection      = false
 
 cloudflare_zone_id    = "42d2a162cb41b523b36daa21f60029a3"
 frontend_hostname     = "giftgen.mithrak.com"

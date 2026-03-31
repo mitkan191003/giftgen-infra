@@ -235,6 +235,9 @@ resource "helm_release" "aws_load_balancer_controller" {
   version          = var.aws_load_balancer_controller_chart_version
   namespace        = "kube-system"
   create_namespace = false
+  wait             = true
+  timeout          = 900
+  atomic           = true
 
   values = [yamlencode({
     clusterName = var.cluster_name
@@ -250,6 +253,12 @@ resource "helm_release" "aws_load_balancer_controller" {
   })]
 
   depends_on = [aws_iam_role_policy_attachment.aws_load_balancer_controller]
+}
+
+resource "time_sleep" "aws_load_balancer_controller_settle" {
+  create_duration = "45s"
+
+  depends_on = [helm_release.aws_load_balancer_controller]
 }
 
 resource "helm_release" "argocd" {
@@ -299,7 +308,7 @@ resource "kubernetes_ingress_v1" "argocd" {
 
   depends_on = [
     helm_release.argocd,
-    helm_release.aws_load_balancer_controller,
+    time_sleep.aws_load_balancer_controller_settle,
   ]
 }
 
@@ -310,6 +319,9 @@ resource "helm_release" "external_secrets" {
   version          = var.external_secrets_chart_version
   namespace        = kubernetes_namespace.external_secrets.metadata[0].name
   create_namespace = false
+  wait             = true
+  timeout          = 900
+  atomic           = true
 
   values = [yamlencode({
     installCRDs = true
@@ -322,7 +334,10 @@ resource "helm_release" "external_secrets" {
     }
   })]
 
-  depends_on = [aws_iam_role_policy_attachment.external_secrets]
+  depends_on = [
+    aws_iam_role_policy_attachment.external_secrets,
+    time_sleep.aws_load_balancer_controller_settle,
+  ]
 }
 
 resource "helm_release" "external_dns" {
@@ -360,7 +375,7 @@ resource "helm_release" "external_dns" {
   })]
 
   depends_on = [
-    helm_release.aws_load_balancer_controller,
+    time_sleep.aws_load_balancer_controller_settle,
     helm_release.external_secrets,
   ]
 }
